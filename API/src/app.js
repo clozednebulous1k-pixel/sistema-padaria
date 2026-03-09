@@ -23,13 +23,17 @@ const authMiddleware = require('./middlewares/authMiddleware');
 const app = express();
 
 // Middlewares
-// Configuração do CORS para permitir requisições do front-end
-app.use(cors({
-  origin: '*', // Permite todas as origens (em produção, especifique URLs)
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  credentials: false
-}));
+// CORS: permitir front na Vercel e qualquer origem (preflight deve receber os headers)
+const corsOptions = {
+  origin: true, // reflete a origem da requisição (ex.: sistema-belfort.vercel.app)
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
+  credentials: false,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+// Garantir que OPTIONS (preflight) responda com 200
+app.options('*', cors(corsOptions));
 
 // Logging de requisições para debug
 app.use((req, res, next) => {
