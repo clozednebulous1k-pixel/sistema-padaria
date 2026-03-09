@@ -1,0 +1,26 @@
+{
+  "nome_empresa": "Gabriel",
+  "motorista": "Gabriel",
+  "data_producao": "2025-01-10",
+  "periodo": "matutino",
+  "observacoes": "Roteiro de entrega - Turno matutino",
+  "status": "pendente",
+  "itens": [
+    {
+      "produto_id": 1,
+      "quantidade": 50,
+      "observacao": "Empresa A"
+    },
+    {
+      "produto_id": 2,
+      "quantidade": 30,
+      "observacao": "Empresa B"
+    },
+    {
+      "produto_id": 1,
+      "quantidade": 25,
+      "observacao": "Empresa C"
+    }
+  ]
+}
+

@@ -1,0 +1,227 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Modo noturno: fundo cinza sólido sem degradê */
+.dark body {
+  background: #111827 !important; /* gray-900 - cinza sólido */
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Garantir que campos de formulário tenham texto visível */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+select,
+textarea {
+  color: #111827; /* text-gray-900 */
+}
+
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="search"],
+.dark input[type="tel"],
+.dark input[type="url"],
+.dark select,
+.dark textarea {
+  color: #f9fafb; /* text-gray-50 */
+  background-color: #374151; /* bg-gray-700 */
+  border-color: #4b5563; /* border-gray-600 */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af; /* text-gray-400 */
+}
+
+/* Reduzir tamanho de todos os campos para melhor visualização */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+select {
+  padding-top: 0.375rem !important; /* py-1.5 ao invés de py-3 */
+  padding-bottom: 0.375rem !important;
+  padding-left: 0.75rem !important; /* px-3 ao invés de px-4 */
+  padding-right: 0.75rem !important;
+  font-size: 0.875rem !important; /* text-sm */
+  line-height: 1.25rem !important;
+  min-height: 2rem !important; /* altura mínima reduzida */
+}
+
+textarea {
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+/* Reduzir espaçamento entre campos de formulário */
+form > div {
+  margin-bottom: 0.5rem !important; /* mb-2 ao invés de mb-6 */
+}
+
+form > div:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Reduzir espaçamento de labels */
+label {
+  margin-bottom: 0.25rem !important; /* mb-1 ao invés de mb-2 */
+  font-size: 0.75rem !important; /* text-xs */
+}
+
+/* Ajustes específicos - removidos para evitar conflitos, 
+   serão feitos diretamente nos componentes conforme necessário */
+
+/* Modo Noturno - estilos globais quando .dark no html */
+.dark .bg-white {
+  background-color: #1f2937 !important;
+}
+.dark .bg-gray-50 {
+  background-color: #111827 !important;
+}
+.dark .bg-gray-100 {
+  background-color: #374151 !important;
+}
+.dark .text-gray-900 {
+  color: #f9fafb !important;
+}
+.dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+.dark .text-gray-600 {
+  color: #d1d5db !important;
+}
+.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #4b5563 !important;
+}
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Animações de transição de página */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-transition {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.page-fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Delay para elementos dentro da página */
+.page-transition-delay-1 {
+  animation: fadeInUp 0.5s ease-out 0.1s both;
+}
+
+.page-transition-delay-2 {
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+.page-transition-delay-3 {
+  animation: fadeInUp 0.5s ease-out 0.3s both;
+}

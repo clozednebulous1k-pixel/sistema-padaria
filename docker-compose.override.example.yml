@@ -1,0 +1,11 @@
+# Copie para docker-compose.override.yml e ajuste conforme necessário
+# Use quando precisar acessar de outro computador na rede
+
+version: '3.8'
+
+services:
+  front:
+    build:
+      args:
+        # Altere para o IP ou hostname do servidor quando acessar de outros PCs
+        NEXT_PUBLIC_API_URL: http://192.168.18.32:3503

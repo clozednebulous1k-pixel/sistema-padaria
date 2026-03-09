@@ -1,0 +1,19 @@
+{
+  "itens": [
+    {
+      "produto_id": 1,
+      "quantidade": 10
+    },
+    {
+      "produto_id": 2,
+      "quantidade": 5
+    },
+    {
+      "produto_id": 3,
+      "quantidade": 2
+    }
+  ],
+  "forma_pagamento": "Dinheiro",
+  "data_venda": "2024-01-15",
+  "nome_cliente": "Padaria do João"
+}

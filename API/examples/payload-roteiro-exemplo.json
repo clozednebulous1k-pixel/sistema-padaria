@@ -1,0 +1,23 @@
+{
+  "nome_empresa": "Padaria do João",
+  "data_producao": "2024-01-15",
+  "observacoes": "Entregar até 14h. Cliente preferencial.",
+  "status": "pendente",
+  "itens": [
+    {
+      "produto_id": 1,
+      "quantidade": 50,
+      "observacao": "Pão bem assado, crocante"
+    },
+    {
+      "produto_id": 2,
+      "quantidade": 30,
+      "observacao": null
+    },
+    {
+      "produto_id": 3,
+      "quantidade": 20,
+      "observacao": "Bolo com cobertura extra"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# Arquivos de ambiente (nunca subir!)
+.env
+.env.*
+!.env.example
+
+# Dependências e builds
+node_modules/
+Front/node_modules/
+API/node_modules/
+Front/.next/
+API/dist/
+
+# Sistema e IDE
+.DS_Store
+*.log
+.idea/
+.vscode/

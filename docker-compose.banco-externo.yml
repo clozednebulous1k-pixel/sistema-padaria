@@ -1,0 +1,37 @@
+# Banco externo (PostgreSQL rodando na rede/host, não no container)
+# Rode: docker compose -f docker-compose.banco-externo.yml up -d --build
+# Defina no .env: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, JWT_SECRET, NEXT_PUBLIC_API_URL
+
+services:
+  api:
+    build:
+      context: ./API
+      dockerfile: Dockerfile
+    container_name: padaria-api
+    restart: unless-stopped
+    env_file:
+      - ./API/.env
+    environment:
+      PORT: 3503
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no .env}
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-db_padaria_belfort}
+      DB_USER: ${DB_USER:?Defina DB_USER no .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env}
+    ports:
+      - "3503:3503"
+
+  front:
+    build:
+      context: ./Front
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3503}
+    container_name: padaria-front
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
