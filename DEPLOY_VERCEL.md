@@ -33,15 +33,39 @@ Você pode usar **Render Postgres** (tudo no Render) ou **Neon** (gratuito, sepa
 2. Crie um projeto e um banco.
 3. No painel, copie a **connection string** ou anote Host, Port, Database, User, Password.
 
-### Rodar as migrations
+### Rodar as migrations no banco
 
-Com qualquer banco, execute os scripts SQL da pasta `API/database/` na ordem (por exemplo no painel do Render/Neon ou com `psql`):
+As tabelas precisam ser criadas **uma vez** no banco do Render (ou Neon). Use um dos jeitos abaixo.
 
-- `01_criar_usuario_banco.sql` (se precisar)
-- `02_criar_tabelas.sql`
-- `migration_recheios.sql` (se existir)
-- `migration_opcoes_relatorio.sql` (se existir)
-- Qualquer outro `.sql` que você já use localmente
+#### Arquivo único (recomendado)
+
+No projeto existe o arquivo **`API/database/RENDER_MIGRATIONS.sql`**, que junta todas as migrations necessárias e **não** usa usuário específico (funciona no Render/Neon). Use esse arquivo.
+
+#### Onde rodar no Render Postgres
+
+1. No [Render](https://render.com), abra o **serviço do PostgreSQL** (não o da API).
+2. No menu lateral, clique em **Connect** ou **Info**.
+3. Na seção **Connections**, o Render mostra:
+   - **PSQL Command** (comando pronto) ou
+   - **External Database URL** (connection string).
+4. **Opção A – Terminal (psql):**
+   - Se você tem PostgreSQL instalado no PC, use o **PSQL Command** que o Render mostra (algo como `psql postgres://usuario:senha@host/database`) e rode no terminal:
+     ```bash
+     psql "COLE_AQUI_A_EXTERNAL_DATABASE_URL"
+     ```
+   - Dentro do `psql`, rode o conteúdo do arquivo `API/database/RENDER_MIGRATIONS.sql` (copie e cole o SQL todo, ou use `\i caminho/para/RENDER_MIGRATIONS.sql` se estiver no mesmo PC).
+5. **Opção B – Cliente gráfico (pgAdmin, DBeaver, etc.):**
+   - Crie uma nova conexão com os dados da aba **Info**: Host, Port, Database, Username, Password.
+   - Abra um **Query Tool** / **Nova consulta SQL**.
+   - Copie todo o conteúdo de `API/database/RENDER_MIGRATIONS.sql`, cole na janela e execute.
+
+#### Onde rodar no Neon
+
+1. Acesse [console.neon.tech](https://console.neon.tech), abra seu projeto e o branch.
+2. No menu lateral, clique em **SQL Editor**.
+3. Copie todo o conteúdo de `API/database/RENDER_MIGRATIONS.sql`, cole no editor e clique em **Run**.
+
+Depois de rodar o script, as tabelas (incluindo `usuarios_padaria`) estarão criadas. Aí é só criar o primeiro usuário via **POST /auth/registro** (pelo Console do navegador ou por Postman) e fazer login no site.
 
 ---
 

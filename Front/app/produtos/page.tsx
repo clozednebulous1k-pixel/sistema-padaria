@@ -302,12 +302,14 @@ export default function ProdutosPage() {
         descricao: '',
         preco: '0.00',
         tipo_massa: novoProdutoTipoMassa?.trim() || null,
+        recheio: novoProdutoRecheio?.trim() || null,
         opcao_relatorio: novoProdutoOpcaoRelatorio?.trim() || null,
       })
       registrarClique('Salvar', 'Produtos', 'Novo Produto (inline)', 'produto', undefined, `Produto: ${nome}`)
       toast.success('Produto criado com sucesso!')
       setNovoProdutoNome('')
       setNovoProdutoTipoMassa('')
+      setNovoProdutoRecheio('')
       setNovoProdutoOpcaoRelatorio('')
       setMostrarNovoProduto(false)
       carregarProdutos()
