@@ -405,6 +405,12 @@ export default function FiltrarRoteiroView() {
       })
   }, [itensFiltrados, massasSelecionadas])
 
+  // Lista para a vista "Massa Doce Cliente": todos os itens de Massa Doce com empresa, pão e quantidade
+  const massaDoceClienteItens = useMemo(() => {
+    return itensFiltrados.filter((p) => p.tipo_massa === 'Massa Doce')
+  }, [itensFiltrados])
+  const totalMassaDoceCliente = massaDoceClienteItens.reduce((s, p) => s + p.quantidade, 0)
+
   const abrirRoteiroParaImpressao = () => {
     const soRoteiroMassa = massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0
     const temItens = soRoteiroMassa ? roteiroPorMassa.some((r) => r.quantidade > 0) : itensFiltrados.length > 0
@@ -536,6 +542,76 @@ export default function FiltrarRoteiroView() {
 </html>
       `)
     }
+    janela.document.close()
+    janela.focus()
+    janela.print()
+  }
+
+  const abrirMassaDoceClienteParaImpressao = () => {
+    if (massaDoceClienteItens.length === 0) {
+      toast.error('Nenhum item de Massa Doce para imprimir.')
+      return
+    }
+    const janela = window.open('', '_blank')
+    if (!janela) {
+      toast.error('Permita pop-ups para abrir a janela de impressão.')
+      return
+    }
+    const dataFormatada = format(dataSelecionada, 'dd/MM/yyyy')
+    const periodoLabel = periodoSelecionado === 'manha' ? 'Manhã' : periodoSelecionado === 'noite' ? 'Noite' : '24h'
+    const diasSemanaPT: Record<number, string> = {
+      0: 'Domingo', 1: 'Segunda-feira', 2: 'Terça-feira', 3: 'Quarta-feira',
+      4: 'Quinta-feira', 5: 'Sexta-feira', 6: 'Sábado'
+    }
+    const diaSemanaNome = diasSemanaPT[dataSelecionada.getDay()]
+    const linhas = massaDoceClienteItens
+      .map(
+        (p) => `
+        <tr>
+          <td>${p.empresa}</td>
+          <td>${p.produto_nome}${p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
+          <td style="text-align: center;">${p.quantidade}</td>
+        </tr>`
+      )
+      .join('')
+    janela.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Massa Doce Cliente - ${dataFormatada}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; font-size: 12px; }
+    h1 { font-size: 16px; margin-bottom: 4px; color: #333; }
+    .info { margin: 8px 0 12px; padding: 8px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 11px; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+    th { background: #550701; color: white; font-weight: bold; }
+    td:last-child { text-align: center; font-weight: bold; }
+    .total-geral { margin-top: 12px; padding: 10px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 14px; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <h1>Massa Doce Cliente - ${diaSemanaNome}, ${dataFormatada}</h1>
+  <div class="info">
+    <p><strong>Período:</strong> ${periodoLabel}</p>
+    <p><strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Empresa</th>
+        <th>Pão</th>
+        <th>Quantidade</th>
+      </tr>
+    </thead>
+    <tbody>${linhas}</tbody>
+  </table>
+  <div class="total-geral">Total: ${totalMassaDoceCliente} pães</div>
+</body>
+</html>
+    `)
     janela.document.close()
     janela.focus()
     janela.print()
@@ -973,12 +1049,12 @@ export default function FiltrarRoteiroView() {
               </div>
             </div>
 
-            {massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0 ? (
               roteiroPorMassa.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400 text-sm py-4">
                   Nenhuma quantidade para as massas selecionadas neste dia/período.
                 </p>
               ) : (
+                <>
                 <div className="space-y-4">
                   {roteiroPorMassa.map(({ massa, quantidade, paes }) => (
                     <div
@@ -1002,6 +1078,55 @@ export default function FiltrarRoteiroView() {
                     </div>
                   ))}
                 </div>
+                {massasSelecionadas.has('Massa Doce') && massaDoceClienteItens.length > 0 ? (
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Massa Doce Cliente</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                          Todos os pães de massa doce por empresa, com quantidade.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {massaDoceClienteItens.length} linha(s) · {totalMassaDoceCliente} un.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={abrirMassaDoceClienteParaImpressao}
+                          className="px-4 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 text-sm"
+                          title="Abre Massa Doce Cliente em nova janela para imprimir"
+                        >
+                          Imprimir
+                        </button>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-primary-600 text-white">
+                            <th className="px-3 py-2 text-left font-semibold">Empresa</th>
+                            <th className="px-3 py-2 text-left font-semibold">Pão</th>
+                            <th className="px-3 py-2 text-center font-semibold">Quantidade</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {massaDoceClienteItens.map((p, idx) => (
+                            <tr
+                              key={`mdc-${p.empresa}-${p.produto_id}-${idx}`}
+                              className="border-t border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-700/50"
+                            >
+                              <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.empresa}</td>
+                              <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.produto_nome}{p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
+                              <td className="px-3 py-2 text-center font-semibold text-gray-900 dark:text-gray-100">{p.quantidade}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : null}
+                </>
               )
             ) : itensFiltrados.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400 text-sm py-4">
