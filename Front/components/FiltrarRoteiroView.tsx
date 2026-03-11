@@ -51,6 +51,7 @@ export interface PedidoFiltro {
   produto_nome: string
   tipo_massa: string | null
   opcao_relatorio: string | null
+  recheio: string | null
   quantidade: number
 }
 
@@ -152,6 +153,7 @@ export default function FiltrarRoteiroView() {
         const produto = produtosMap.get(item.produto_id)
         const tipoMassa = produto?.tipo_massa ?? null
         const opcaoRelatorio = produto?.opcao_relatorio ?? null
+        const recheio = produto?.recheio ?? null
         const key = `${empresa}|${item.produto_id}`
         const qtd = Number(item.quantidade) || 0
         if (agregado.has(key)) {
@@ -164,6 +166,7 @@ export default function FiltrarRoteiroView() {
             produto_nome: produtoNome,
             tipo_massa: tipoMassa ?? null,
             opcao_relatorio: opcaoRelatorio ?? null,
+            recheio: recheio ?? null,
             quantidade: qtd
           })
         }
@@ -488,7 +491,7 @@ export default function FiltrarRoteiroView() {
           (p) => `
         <tr>
           <td>${p.empresa}</td>
-          <td>${p.produto_nome}${p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
+          <td>${p.produto_nome}${p.recheio ? ` ${p.recheio}` : ''}${p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
           <td style="text-align: center;">${p.quantidade}</td>
         </tr>`
         )
@@ -570,7 +573,7 @@ export default function FiltrarRoteiroView() {
         (p) => `
         <tr>
           <td>${p.empresa}</td>
-          <td>${p.produto_nome}${p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
+          <td>${p.produto_nome}${p.recheio ? ` ${p.recheio}` : ''}${p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
           <td style="text-align: center;">${p.quantidade}</td>
         </tr>`
       )
@@ -948,24 +951,24 @@ export default function FiltrarRoteiroView() {
               ) : (
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-primary-600 text-white">
-                        <th className="px-3 py-2 text-left font-semibold">Empresa</th>
-                        <th className="px-3 py-2 text-left font-semibold">Pão</th>
-                        <th className="px-3 py-2 text-center font-semibold">Quantidade</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {roteiroMassaDoceClienteItens.map((p, idx) => (
-                        <tr
-                          key={`mdc-${p.empresa}-${p.produto_id}-${idx}`}
-                          className="border-t border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-700/50"
-                        >
-                          <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.empresa}</td>
-                          <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.produto_nome}{p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
-                          <td className="px-3 py-2 text-center font-semibold text-gray-900 dark:text-gray-100">{p.quantidade}</td>
-                        </tr>
-                      ))}
+                        <thead>
+                          <tr className="bg-primary-600 text-white">
+                            <th className="px-3 py-2 text-left font-semibold">Empresa</th>
+                            <th className="px-3 py-2 text-left font-semibold">Pão</th>
+                            <th className="px-3 py-2 text-center font-semibold">Quantidade</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {roteiroMassaDoceClienteItens.map((p, idx) => (
+                            <tr
+                              key={`mdc-${p.empresa}-${p.produto_id}-${idx}`}
+                              className="border-t border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-700/50"
+                            >
+                              <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.empresa}</td>
+                              <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.produto_nome}{p.recheio ? ` ${p.recheio}` : ''}{p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
+                              <td className="px-3 py-2 text-center font-semibold text-gray-900 dark:text-gray-100">{p.quantidade}</td>
+                            </tr>
+                          ))}
                     </tbody>
                   </table>
                 </div>
@@ -1069,15 +1072,18 @@ export default function FiltrarRoteiroView() {
           )}
 
           {(paesSelecionados.size > 0 || massasSelecionadas.size > 0 || opcoesRelatorioSelecionadas.size > 0) ? (
+          (() => {
+            const soRoteiroPorMassa = massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0
+            return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border border-gray-200 dark:border-gray-700">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0
+                  {soRoteiroPorMassa
                     ? `Roteiro por massa${massasSelecionadas.size === 1 ? '' : 's'}`
                     : 'Roteiro'}
                 </h2>
-                {massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0 ? (
+                {soRoteiroPorMassa ? (
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
                     Clique em outro tipo de massa acima para adicionar a este roteiro.
                   </p>
@@ -1090,7 +1096,7 @@ export default function FiltrarRoteiroView() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0 ? (
+                {soRoteiroPorMassa ? (
                   <>
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {roteiroPorMassa.length} massa(s) · {roteiroPorMassa.reduce((s, r) => s + r.quantidade, 0)} un.
@@ -1124,12 +1130,12 @@ export default function FiltrarRoteiroView() {
               </div>
             </div>
 
+            {soRoteiroPorMassa ? (
               roteiroPorMassa.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400 text-sm py-4">
                   Nenhuma quantidade para as massas selecionadas neste dia/período.
                 </p>
               ) : (
-                <>
                 <div className="space-y-4">
                   {roteiroPorMassa.map(({ massa, quantidade, paes }) => (
                     <div
@@ -1153,7 +1159,6 @@ export default function FiltrarRoteiroView() {
                     </div>
                   ))}
                 </div>
-                </>
               )
             ) : itensFiltrados.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400 text-sm py-4">
@@ -1164,7 +1169,7 @@ export default function FiltrarRoteiroView() {
             ) : (
               <>
                 <p className="text-gray-500 dark:text-gray-400 text-sm py-2 mb-3">
-                  O botão Imprimir abre o diálogo de impressão do roteiro (Empresa, Pão, Quantidade).
+                  O botão Imprimir abre o diálogo de impressão do roteiro (Empresa, Pão com recheio/opção, Quantidade).
                 </p>
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
                   <table className="w-full text-sm">
@@ -1182,7 +1187,7 @@ export default function FiltrarRoteiroView() {
                           className="border-t border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-700/50"
                         >
                           <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.empresa}</td>
-                          <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.produto_nome}{p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
+                          <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{p.produto_nome}{p.recheio ? ` ${p.recheio}` : ''}{p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}</td>
                           <td className="px-3 py-2 text-center font-semibold text-gray-900 dark:text-gray-100">{p.quantidade}</td>
                         </tr>
                       ))}
@@ -1192,6 +1197,8 @@ export default function FiltrarRoteiroView() {
               </>
             )}
           </div>
+            )
+          })()
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 text-center">
               <p className="text-gray-600 dark:text-gray-400">
