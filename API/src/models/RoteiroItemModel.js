@@ -28,7 +28,8 @@ class RoteiroItemModel {
         ri.*,
         p.nome as produto_nome,
         p.descricao as produto_descricao,
-        p.opcao_relatorio as opcao_relatorio
+        p.opcao_relatorio as opcao_relatorio,
+        p.recheio as recheio
       FROM roteiro_itens_padaria ri
       INNER JOIN produtos_padaria p ON ri.produto_id = p.id
       WHERE ri.roteiro_id = $1

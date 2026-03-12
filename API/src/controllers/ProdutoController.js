@@ -70,13 +70,31 @@ class ProdutoController {
         });
       }
 
+      const nomeTrim = nome.trim();
+      const tipoMassaTrim = tipo_massa?.trim() || null;
+      const opcaoTrim = opcao_relatorio?.trim() || null;
+      const recheioTrim = recheio?.trim() || null;
+
+      const duplicado = await ProdutoModel.findDuplicate({
+        nome: nomeTrim,
+        tipo_massa: tipoMassaTrim,
+        opcao_relatorio: opcaoTrim,
+        recheio: recheioTrim,
+      });
+      if (duplicado) {
+        return res.status(400).json({
+          success: false,
+          message: 'Já existe um produto com o mesmo nome, tipo de massa, opção e recheio. Não é permitido cadastrar itens exatamente iguais.',
+        });
+      }
+
       const produto = await ProdutoModel.create({
-        nome: nome.trim(),
+        nome: nomeTrim,
         descricao: descricao?.trim() || null,
         preco: precoNumero,
-        tipo_massa: tipo_massa?.trim() || null,
-        opcao_relatorio: opcao_relatorio?.trim() || null,
-        recheio: recheio?.trim() || null,
+        tipo_massa: tipoMassaTrim,
+        opcao_relatorio: opcaoTrim,
+        recheio: recheioTrim,
       });
 
       // Registrar ação na auditoria
@@ -146,6 +164,22 @@ class ProdutoController {
       if (tipo_massa !== undefined) dadosAtualizacao.tipo_massa = tipo_massa?.trim() || null;
       if (opcao_relatorio !== undefined) dadosAtualizacao.opcao_relatorio = opcao_relatorio?.trim() || null;
       if (recheio !== undefined) dadosAtualizacao.recheio = recheio?.trim() || null;
+
+      const nomeFinal = dadosAtualizacao.nome !== undefined ? dadosAtualizacao.nome : produtoExistente.nome;
+      const tipoMassaFinal = dadosAtualizacao.tipo_massa !== undefined ? dadosAtualizacao.tipo_massa : produtoExistente.tipo_massa;
+      const opcaoFinal = dadosAtualizacao.opcao_relatorio !== undefined ? dadosAtualizacao.opcao_relatorio : produtoExistente.opcao_relatorio;
+      const recheioFinal = dadosAtualizacao.recheio !== undefined ? dadosAtualizacao.recheio : produtoExistente.recheio;
+
+      const duplicado = await ProdutoModel.findDuplicate(
+        { nome: nomeFinal, tipo_massa: tipoMassaFinal, opcao_relatorio: opcaoFinal, recheio: recheioFinal },
+        parseInt(id, 10)
+      );
+      if (duplicado) {
+        return res.status(400).json({
+          success: false,
+          message: 'Já existe outro produto com o mesmo nome, tipo de massa, opção e recheio. Não é permitido ter itens exatamente iguais.',
+        });
+      }
 
       const produto = await ProdutoModel.update(id, dadosAtualizacao);
 

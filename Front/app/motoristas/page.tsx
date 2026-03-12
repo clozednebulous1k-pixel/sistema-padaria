@@ -10,6 +10,7 @@ import { ptBR } from 'date-fns/locale'
 import Loading from '@/components/Loading'
 import { registrarClique } from '@/lib/audit'
 import ConfirmModal from '@/components/ConfirmModal'
+import { opcaoRelatorioParaLabel } from '@/lib/opcoesRelatorio'
 
 const DIAS_SEMANA = [
   'Segunda-feira',
@@ -1848,7 +1849,7 @@ function MotoristaCard({
                             {itensSlot.map((item, idx) => (
                               <tr key={idx}>
                                 <td className="px-2 py-1.5 text-gray-900">{item.observacao || '-'}</td>
-                                <td className="px-2 py-1.5 text-gray-900">{item.produto_nome || `ID: ${item.produto_id}`}</td>
+                                <td className="px-2 py-1.5 text-gray-900">{item.produto_nome || `ID: ${item.produto_id}`}{item.recheio ? ` ${item.recheio}` : ''}{item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''}</td>
                                 <td className="px-2 py-1.5 text-center font-semibold text-gray-900">{item.quantidade}</td>
                               </tr>
                             ))}

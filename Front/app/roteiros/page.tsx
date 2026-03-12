@@ -402,7 +402,7 @@ export default function RoteirosPage() {
     nomeRoteiro: string,
     diaSemana: string,
     dataDia: string,
-    itens: Array<{ observacao?: string | null; produto_nome?: string; produto_id: number; quantidade: number; opcao_relatorio?: string | null }>,
+    itens: Array<{ observacao?: string | null; produto_nome?: string; produto_id: number; quantidade: number; opcao_relatorio?: string | null; recheio?: string | null }>,
     tipo: 'roteiro' | 'romaneio' = 'roteiro',
     tamanhoPercent: number = 100
   ) => {
@@ -454,13 +454,15 @@ export default function RoteirosPage() {
                 </tr>
               </thead>
               <tbody>
-                ${itens.map((item) => `
+                ${itens.map((item) => {
+                  const paoLabel = (item.produto_nome || `ID: ${item.produto_id}`) + (item.recheio ? ` ${item.recheio}` : '') + (item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : '')
+                  return `
                   <tr>
                     <td>${item.observacao || '-'}</td>
-                    <td>${item.produto_nome || `ID: ${item.produto_id}`}</td>
+                    <td>${paoLabel}</td>
                     <td>${item.quantidade}</td>
                   </tr>
-                `).join('')}
+                `}).join('')}
               </tbody>
             </table>
             <div class="totais">
@@ -1641,7 +1643,7 @@ export default function RoteirosPage() {
                                     {itensSlot.map((item, idx) => (
                                       <tr key={idx}>
                                         <td className="px-2 py-1 text-gray-900 text-xs">{item.observacao || '-'}</td>
-                                        <td className="px-2 py-1 text-gray-900 text-xs">{item.produto_nome || `ID: ${item.produto_id}`}{item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''}</td>
+                                        <td className="px-2 py-1 text-gray-900 text-xs">{item.produto_nome || `ID: ${item.produto_id}`}{item.recheio ? ` ${item.recheio}` : ''}{item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''}</td>
                                         <td className="px-2 py-1 text-center font-semibold text-xs">{item.quantidade}</td>
                                       </tr>
                                     ))}
@@ -1833,7 +1835,7 @@ export default function RoteirosPage() {
                     {modalImpressaoRoteiro.itens.map((item, idx) => (
                       <tr key={idx} className="border-b border-gray-200 dark:border-gray-600">
                         <td className="border border-gray-300 dark:border-gray-600 p-3">{item.observacao || '-'}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 p-3">{item.produto_nome || `ID: ${item.produto_id}`}{item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 p-3">{item.produto_nome || `ID: ${item.produto_id}`}{item.recheio ? ` ${item.recheio}` : ''}{item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''}</td>
                         <td className="border border-gray-300 dark:border-gray-600 p-3">{item.quantidade}</td>
                       </tr>
                     ))}

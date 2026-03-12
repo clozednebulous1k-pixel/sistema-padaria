@@ -90,6 +90,7 @@ export interface RoteiroItemResponse {
   criado_em: string;
   produto_nome?: string;
   opcao_relatorio?: string | null;
+  recheio?: string | null;
 }
 
 export interface Roteiro {

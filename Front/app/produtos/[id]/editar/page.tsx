@@ -80,7 +80,8 @@ export default function EditarProdutoPage() {
       toast.success('Produto atualizado com sucesso!')
       router.push('/produtos')
     } catch (error: any) {
-      toast.error('Erro ao atualizar produto')
+      const msg = error?.response?.data?.message || error?.message || 'Erro ao atualizar produto'
+      toast.error(msg)
       console.error(error)
     } finally {
       setLoading(false)

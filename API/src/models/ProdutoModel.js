@@ -114,6 +114,36 @@ class ProdutoModel {
     const result = await pool.query(query, [id]);
     return result.rows[0]?.ativo === true;
   }
+
+  /**
+   * Busca produto com mesma combinação nome + tipo_massa + opcao_relatorio + recheio (evitar duplicados).
+   * Retorna o primeiro encontrado ou null. Considera apenas não deletados.
+   * @param {object} params - { nome, tipo_massa, opcao_relatorio, recheio }
+   * @param {number} [excludeId] - ID a excluir (para uso no update)
+   */
+  static async findDuplicate({ nome, tipo_massa, opcao_relatorio, recheio }, excludeId = null) {
+    const n = (nome || '').trim().toLowerCase();
+    const tm = (tipo_massa || '').trim();
+    const op = (opcao_relatorio || '').trim().toLowerCase();
+    const rec = (recheio || '').trim();
+
+    let query = `
+      SELECT id FROM produtos_padaria
+      WHERE deletado_em IS NULL
+        AND LOWER(TRIM(nome)) = $1
+        AND COALESCE(TRIM(tipo_massa), '') = $2
+        AND LOWER(COALESCE(TRIM(opcao_relatorio), '')) = $3
+        AND COALESCE(TRIM(recheio), '') = $4
+    `;
+    const values = [n, tm, op, rec];
+    if (excludeId != null) {
+      query += ' AND id != $5';
+      values.push(excludeId);
+    }
+    query += ' LIMIT 1';
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  }
 }
 
 module.exports = ProdutoModel;
