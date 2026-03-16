@@ -199,6 +199,12 @@ export default function EditarRoteiroPage() {
             quantidade: item.quantidade,
           }
         })
+
+        // Ordenar itens do formulário por nome da empresa ao carregar (interface mais organizada)
+        itensComEmpresas.sort((a, b) =>
+          a.nome_empresa.trim().localeCompare(b.nome_empresa.trim(), 'pt-BR', { sensitivity: 'base' })
+        )
+
         setValue('itens', itensComEmpresas, { shouldDirty: false })
       } else {
         const empresaInicial = roteiroData.nome_empresa && roteiroData.nome_empresa.trim()
@@ -522,74 +528,26 @@ export default function EditarRoteiroPage() {
                   className="grid md:grid-cols-12 gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200"
                 >
                   <div className="md:col-span-4">
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Empresa/Cliente * <span className="text-gray-500 font-normal">({empresasParaSelect.length} cadastradas)</span>
+                    <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Empresa/Cliente
                     </label>
-                    <div className="relative">
-                      <Controller
-                        control={control}
-                        name={`itens.${index}.nome_empresa`}
-                        rules={{
-                          required: 'Selecione ou adicione uma empresa',
-                          validate: (v) => (v && v !== '__nova__') || 'Selecione ou adicione uma empresa',
-                        }}
-                        render={({ field }) => (
-                          <SelectComBusca
-                            options={empresasParaSelect.map((e) => ({ value: e, label: e }))}
-                            value={field.value === '__nova__' ? '' : (field.value || '')}
-                            onChange={(v) => field.onChange(v)}
-                            placeholder="Digite para buscar empresa..."
-                            dark={darkMode}
-                          />
-                        )}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setValue(`itens.${index}.nome_empresa`, '__nova__')}
-                        className="mt-1.5 text-xs text-primary-600 dark:text-primary-400 hover:underline"
-                      >
-                        + Adicionar Nova Empresa
-                      </button>
-                      {watch(`itens.${index}.nome_empresa`) === '__nova__' && (
-                        <div className="mt-1 flex gap-1.5">
-                          <input
-                            type="text"
-                            value={novaEmpresa[index] || ''}
-                            onChange={(e) => {
-                              setNovaEmpresa({ ...novaEmpresa, [index]: e.target.value })
-                            }}
-                            onKeyDown={async (e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault()
-                                const valor = novaEmpresa[index]?.trim()
-                                if (valor) {
-                                  await salvarEmpresa(valor)
-                                  setValue(`itens.${index}.nome_empresa`, valor)
-                                  setNovaEmpresa({ ...novaEmpresa, [index]: '' })
-                                }
-                              }
-                            }}
-                            className="flex-1 px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="Digite o nome da empresa e pressione Enter"
-                            autoFocus
-                          />
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const valor = novaEmpresa[index]?.trim()
-                              if (valor) {
-                                await salvarEmpresa(valor)
-                                setValue(`itens.${index}.nome_empresa`, valor)
-                                setNovaEmpresa({ ...novaEmpresa, [index]: '' })
-                              }
-                            }}
-                            className="px-3 py-1.5 text-sm bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-semibold"
-                          >
-                            Salvar
-                          </button>
-                        </div>
+                    <Controller
+                      control={control}
+                      name={`itens.${index}.nome_empresa`}
+                      rules={{
+                        required: 'Selecione uma empresa',
+                      }}
+                      render={({ field }) => (
+                        <SelectComBusca
+                          options={empresasParaSelect.map((e) => ({ value: e, label: e }))}
+                          value={field.value || ''}
+                          onChange={(v) => field.onChange(v)}
+                          placeholder="Digite para buscar empresa..."
+                          dark={darkMode}
+                          onFocusExtra={carregarEmpresas}
+                        />
                       )}
-                    </div>
+                    />
                     {errors.itens?.[index]?.nome_empresa && (
                       <p className="text-red-600 text-xs mt-0.5">
                         {errors.itens[index]?.nome_empresa?.message}

@@ -130,6 +130,10 @@ function NovoRoteiroContent() {
       if (roteiroNoSlot) {
         const roteiroCompleto = await roteiroApi.buscar(roteiroNoSlot.id)
         setRoteiroExistente(roteiroCompleto)
+
+        // Garante que, ao entrar em "Editar" (adicionar pedidos em roteiro existente),
+        // a lista de empresas seja recarregada com tudo que está no backend.
+        await carregarEmpresas()
       } else {
         setRoteiroExistente(null)
       }
@@ -306,12 +310,17 @@ function NovoRoteiroContent() {
       
       if (roteiroNoSlot) {
         const roteiroCompleto = await roteiroApi.buscar(roteiroNoSlot.id)
-        const itensExistentes: RoteiroItem[] = (roteiroCompleto.itens || []).map((item) => ({
+        const itensExistentes = (roteiroCompleto.itens || []).map((item) => ({
           produto_id: item.produto_id,
           quantidade: item.quantidade,
           observacao: item.observacao || undefined,
         }))
-        const todosItens = [...itensExistentes, ...novosItens]
+
+        // Juntar itens antigos + novos e ordenar por empresa (observacao) antes de salvar
+        const todosItens = [...itensExistentes, ...novosItens].sort((a, b) =>
+          (a.observacao || '').trim().localeCompare((b.observacao || '').trim(), 'pt-BR', { sensitivity: 'base' })
+        )
+
         await roteiroApi.atualizarItens(roteiroNoSlot.id, todosItens)
         toast.success(`${novosItens.length} pedido(s) adicionado(s) ao Roteiro ${slotIndex + 1}!`)
       } else {
@@ -447,7 +456,6 @@ function NovoRoteiroContent() {
                   <div className="md:col-span-4">
                     <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
                       Empresa/Cliente
-                      <span className="text-gray-500 font-normal"> ({empresasParaSelect.length} cadastradas)</span>
                     </label>
                     <Controller
                       control={control}
@@ -462,6 +470,7 @@ function NovoRoteiroContent() {
                           onChange={(v) => field.onChange(v)}
                           placeholder="Digite para buscar empresa..."
                           dark={darkMode}
+                          onFocusExtra={carregarEmpresas}
                         />
                       )}
                     />

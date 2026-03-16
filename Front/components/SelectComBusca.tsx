@@ -17,6 +17,8 @@ interface SelectComBuscaProps<T = string | number> {
   disabled?: boolean
   /** Para modo escuro */
   dark?: boolean
+  /** Callback extra ao focar (ex.: recarregar dados) */
+  onFocusExtra?: () => void
 }
 
 export function SelectComBusca<T extends string | number>({
@@ -28,6 +30,7 @@ export function SelectComBusca<T extends string | number>({
   id,
   disabled = false,
   dark = false,
+  onFocusExtra,
 }: SelectComBuscaProps<T>) {
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState('')
@@ -73,7 +76,12 @@ export function SelectComBusca<T extends string | number>({
             setFilter(e.target.value)
             if (!open) setOpen(true)
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true)
+            if (onFocusExtra) {
+              onFocusExtra()
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               setOpen(false)

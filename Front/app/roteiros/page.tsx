@@ -1640,13 +1640,28 @@ export default function RoteirosPage() {
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-gray-100">
-                                    {itensSlot.map((item, idx) => (
-                                      <tr key={idx}>
-                                        <td className="px-2 py-1 text-gray-900 text-xs">{item.observacao || '-'}</td>
-                                        <td className="px-2 py-1 text-gray-900 text-xs">{item.produto_nome || `ID: ${item.produto_id}`}{item.recheio ? ` ${item.recheio}` : ''}{item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''}</td>
-                                        <td className="px-2 py-1 text-center font-semibold text-xs">{item.quantidade}</td>
-                                      </tr>
-                                    ))}
+                                    {itensSlot
+                                      .slice()
+                                      .sort((a, b) => {
+                                        const empA = (a.observacao || '').trim()
+                                        const empB = (b.observacao || '').trim()
+                                        const cmpEmp = empA.localeCompare(empB, 'pt-BR', { sensitivity: 'base' })
+                                        if (cmpEmp !== 0) return cmpEmp
+                                        const nomeA = `${a.produto_nome || ''}${a.recheio ? ` ${a.recheio}` : ''}${a.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(a.opcao_relatorio)}` : ''}`
+                                        const nomeB = `${b.produto_nome || ''}${b.recheio ? ` ${b.recheio}` : ''}${b.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(b.opcao_relatorio)}` : ''}`
+                                        return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' })
+                                      })
+                                      .map((item, idx) => (
+                                        <tr key={idx}>
+                                          <td className="px-2 py-1 text-gray-900 text-xs">{item.observacao || '-'}</td>
+                                          <td className="px-2 py-1 text-gray-900 text-xs">
+                                            {item.produto_nome || `ID: ${item.produto_id}`}
+                                            {item.recheio ? ` ${item.recheio}` : ''}
+                                            {item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''}
+                                          </td>
+                                          <td className="px-2 py-1 text-center font-semibold text-xs">{item.quantidade}</td>
+                                        </tr>
+                                      ))}
                                   </tbody>
                                 </table>
                                 </>
