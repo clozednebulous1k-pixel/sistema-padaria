@@ -371,12 +371,21 @@ export default function FiltrarRoteiroView() {
   }
 
   const itensFiltrados = useMemo(() => {
-    return pedidosDoDia.filter((p) => {
+    const filtrados = pedidosDoDia.filter((p) => {
       const paoOk = paesSelecionados.size === 0 || paesSelecionados.has(p.produto_nome)
       const massaOk = massasSelecionadas.size === 0 || (p.tipo_massa && massasSelecionadas.has(p.tipo_massa))
       const opcaoOk = opcoesRelatorioSelecionadas.size === 0 || (p.opcao_relatorio && opcoesRelatorioSelecionadas.has((p.opcao_relatorio || '').trim().toLowerCase()))
       const empresaOk = (!todasEmpresasDesmarcadas && empresasSelecionadas.size === 0) || empresasSelecionadas.has(p.empresa)
       return paoOk && massaOk && opcaoOk && empresaOk
+    })
+
+    // Ordenar por empresa e, dentro da empresa, por nome do pão (incluindo recheio/opção)
+    return filtrados.slice().sort((a, b) => {
+      const cmpEmpresa = a.empresa.localeCompare(b.empresa, 'pt-BR', { sensitivity: 'base' })
+      if (cmpEmpresa !== 0) return cmpEmpresa
+      const nomeA = `${a.produto_nome || ''}${a.recheio ? ` ${a.recheio}` : ''}${a.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(a.opcao_relatorio)}` : ''}`
+      const nomeB = `${b.produto_nome || ''}${b.recheio ? ` ${b.recheio}` : ''}${b.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(b.opcao_relatorio)}` : ''}`
+      return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' })
     })
   }, [pedidosDoDia, paesSelecionados, massasSelecionadas, opcoesRelatorioSelecionadas, empresasSelecionadas, todasEmpresasDesmarcadas])
 

@@ -33,12 +33,16 @@ export function SelectComBusca<T extends string | number>({
   const [filter, setFilter] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const selectedOption = options.find((o) => o.value === value)
+  const sortedOptions = options
+    .slice()
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }))
+
+  const selectedOption = sortedOptions.find((o) => o.value === value)
   const displayValue = selectedOption ? selectedOption.label : ''
   const term = (filter || (open ? filter : displayValue)).trim().toLowerCase()
   const filtered = term
-    ? options.filter((o) => o.label.toLowerCase().includes(term))
-    : options
+    ? sortedOptions.filter((o) => o.label.toLowerCase().includes(term))
+    : sortedOptions
 
   useEffect(() => {
     if (!open) setFilter('')
