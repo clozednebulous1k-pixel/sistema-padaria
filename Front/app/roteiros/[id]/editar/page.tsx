@@ -243,12 +243,15 @@ export default function EditarRoteiroPage() {
         item.produto_id > 0 &&
         item.quantidade > 0
     )
+    const itensOrdenados = [...itensValidos].sort((a, b) =>
+      a.nome_empresa.trim().localeCompare(b.nome_empresa.trim(), 'pt-BR', { sensitivity: 'base' })
+    )
 
     try {
       setLoading(true)
       
       // Salvar empresas usadas (apenas dos itens válidos)
-      for (const item of itensValidos) {
+      for (const item of itensOrdenados) {
         if (item.nome_empresa && item.nome_empresa.trim()) {
           await salvarEmpresa(item.nome_empresa)
         }
@@ -279,7 +282,7 @@ export default function EditarRoteiroPage() {
       })
 
       // Preparar itens para atualização (apenas itens válidos) - IMPORTANTE: salvar empresa na observacao
-      const itensParaAtualizar: RoteiroItem[] = itensValidos.map((item) => ({
+      const itensParaAtualizar: RoteiroItem[] = itensOrdenados.map((item) => ({
         produto_id: item.produto_id,
         quantidade: item.quantidade,
         observacao: item.nome_empresa.trim(), // Salvar empresa na observacao do item
@@ -513,14 +516,7 @@ export default function EditarRoteiroPage() {
             </div>
           ) : (
             <>
-              {fields
-                .map((field, index) => ({
-                  field,
-                  index,
-                  empresa: (itens?.[index]?.nome_empresa || '').toString(),
-                }))
-                .sort((a, b) => a.empresa.localeCompare(b.empresa, 'pt-BR', { sensitivity: 'base' }))
-                .map(({ field, index }) => (
+              {fields.map((field, index) => (
                 <div
                   key={field.id}
                   className="grid md:grid-cols-12 gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200"
