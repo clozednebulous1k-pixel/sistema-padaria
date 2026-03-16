@@ -436,7 +436,14 @@ function NovoRoteiroContent() {
             </div>
           ) : (
             <>
-              {fields.map((field, index) => (
+              {fields
+                .map((field, index) => ({
+                  field,
+                  index,
+                  empresa: (itens?.[index]?.nome_empresa || '').toString(),
+                }))
+                .sort((a, b) => a.empresa.localeCompare(b.empresa, 'pt-BR', { sensitivity: 'base' }))
+                .map(({ field, index }) => (
                 <div
                   key={field.id}
                   className="grid md:grid-cols-12 gap-2 mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200"
