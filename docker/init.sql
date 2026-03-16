@@ -1,11 +1,6 @@
 -- Script de inicialização do banco para Docker
 -- Executado automaticamente na primeira subida do container PostgreSQL
-
--- Conceder permissões no schema
-GRANT ALL ON SCHEMA public TO "Alessandro";
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "Alessandro";
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "Alessandro";
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "Alessandro";
+-- O usuário do banco é definido por POSTGRES_USER no docker-compose (.env)
 
 -- Função para updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -148,9 +143,5 @@ CREATE TABLE IF NOT EXISTS auditoria_padaria (
     user_agent TEXT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Conceder permissões
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "Alessandro";
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "Alessandro";
 
 -- Primeiro usuário: criar via API POST /auth/registro (nome, email, senha). O primeiro usuário criado vira admin.

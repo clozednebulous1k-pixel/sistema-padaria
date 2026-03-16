@@ -58,7 +58,10 @@ export default function EditarRoteiroPage() {
   })
 
   const itens = watch('itens')
-  const empresasParaSelect = empresas.filter((e) => !DIAS_SEMANA.includes(e))
+  const empresasParaSelect = empresas
+    .filter((e) => !DIAS_SEMANA.includes(e))
+    .slice()
+    .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
 
   useEffect(() => {
     const inicializar = async () => {
