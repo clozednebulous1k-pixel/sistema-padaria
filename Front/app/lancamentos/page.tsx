@@ -14,6 +14,8 @@ type LinhaLancamento = {
   quantidade: number
 }
 
+type PeriodoLancamentos = 'todos' | 'matutino' | 'noturno'
+
 function normalizarTexto(s: string): string {
   return (s || '')
     .normalize('NFD')
@@ -31,6 +33,8 @@ export default function LancamentosPage() {
     return format(hoje, 'yyyy-MM-dd')
   })
 
+  const [periodoSelecionado, setPeriodoSelecionado] = useState<PeriodoLancamentos>('todos')
+
   const [empresasDisponiveis, setEmpresasDisponiveis] = useState<string[]>([])
   const [empresasSelecionadas, setEmpresasSelecionadas] = useState<string[]>([])
   const [buscaEmpresas, setBuscaEmpresas] = useState('')
@@ -41,6 +45,12 @@ export default function LancamentosPage() {
 
   const [carregado, setCarregado] = useState(false)
 
+  const periodoLabel = (p: PeriodoLancamentos): string => {
+    if (p === 'matutino') return 'Manhã'
+    if (p === 'noturno') return 'Noite'
+    return 'Todos'
+  }
+
   const carregarEmpresasDisponiveisParaData = async () => {
     if (!dataSelecionada) return
     try {
@@ -49,7 +59,10 @@ export default function LancamentosPage() {
       setLinhas([])
 
       // 1) Pegamos roteiros por data e filtramos apenas os de produção (motorista vazio)
-      const roteirosDoDia = await roteiroApi.listar({ data_producao: dataSelecionada })
+      const roteirosDoDia = await roteiroApi.listar({
+        data_producao: dataSelecionada,
+        ...(periodoSelecionado !== 'todos' ? { periodo: periodoSelecionado } : {}),
+      })
       const roteirosProducao = roteirosDoDia.filter((r) => !r.motorista || r.motorista.trim() === '')
 
       // 2) Para cada roteiro, buscamos os itens
@@ -99,7 +112,10 @@ export default function LancamentosPage() {
       setCarregado(true)
 
       // 1) Pegamos roteiros por data e filtramos apenas os de produção (motorista vazio)
-      const roteirosDoDia = await roteiroApi.listar({ data_producao: dataSelecionada })
+      const roteirosDoDia = await roteiroApi.listar({
+        data_producao: dataSelecionada,
+        ...(periodoSelecionado !== 'todos' ? { periodo: periodoSelecionado } : {}),
+      })
       const roteirosProducao = roteirosDoDia.filter((r) => !r.motorista || r.motorista.trim() === '')
 
       // 2) Para cada roteiro, buscamos os itens
@@ -155,6 +171,7 @@ export default function LancamentosPage() {
     }
 
     const dataFormatada = dataSelecionada
+    const periodoTexto = periodoLabel(periodoSelecionado)
     const empresasUnicas = Array.from(new Set(linhas.map((l) => l.empresa))).sort((a, b) =>
       a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
     )
@@ -180,7 +197,7 @@ export default function LancamentosPage() {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Lançamentos - ${dataFormatada}</title>
+  <title>Lançamentos - ${dataFormatada} (${periodoTexto})</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 16px; font-size: 12px; }
     h1 { font-size: 16px; margin-bottom: 4px; color: #333; }
@@ -194,9 +211,10 @@ export default function LancamentosPage() {
   </style>
 </head>
 <body>
-  <h1>Lançamentos - ${dataFormatada}</h1>
+  <h1>Lançamentos - ${dataFormatada} (${periodoTexto})</h1>
   <div class="info">
     <p><strong>Data:</strong> ${dataFormatada}</p>
+    <p><strong>Período:</strong> ${periodoTexto}</p>
     <p><strong>Empresas:</strong> ${empresasUnicas.join(', ')}</p>
     <p><strong>Total de pães:</strong> ${totalGeral}</p>
   </div>
@@ -230,7 +248,7 @@ export default function LancamentosPage() {
     setLinhas([])
     carregarEmpresasDisponiveisParaData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataSelecionada])
+  }, [dataSelecionada, periodoSelecionado])
 
   if (loading && !carregado) return <Loading />
 
@@ -265,6 +283,19 @@ export default function LancamentosPage() {
               onChange={(e) => setDataSelecionada(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
             />
+          </div>
+
+          <div className="flex-1 min-w-[220px]">
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Período</label>
+            <select
+              value={periodoSelecionado}
+              onChange={(e) => setPeriodoSelecionado(e.target.value as PeriodoLancamentos)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+            >
+              <option value="todos">Todos</option>
+              <option value="matutino">Manhã</option>
+              <option value="noturno">Noite</option>
+            </select>
           </div>
 
           <div className="flex gap-2">
