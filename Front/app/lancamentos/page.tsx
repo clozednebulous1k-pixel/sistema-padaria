@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
-import { empresaApi, roteiroApi, RoteiroItemResponse, Empresa } from '@/lib/api'
+import { empresaApi, roteiroApi, Empresa } from '@/lib/api'
 import { opcaoRelatorioParaLabel } from '@/lib/opcoesRelatorio'
 import Link from 'next/link'
 import { SelectComBusca } from '@/components/SelectComBusca'
 import Loading from '@/components/Loading'
+import { useTheme } from '@/components/ThemeProvider'
 
 type LinhaLancamento = {
   empresa: string
@@ -25,6 +26,7 @@ function normalizarTexto(s: string): string {
 
 export default function LancamentosPage() {
   const [loading, setLoading] = useState(false)
+  const { darkMode } = useTheme()
 
   const hoje = useMemo(() => new Date(), [])
   const [dataSelecionada, setDataSelecionada] = useState<string>(() => {
@@ -236,7 +238,7 @@ export default function LancamentosPage() {
               value={empresaSelecionada}
               onChange={(v) => setEmpresaSelecionada(v)}
               placeholder="Digite para buscar empresa..."
-              dark={false}
+              dark={darkMode}
             />
           </div>
 
