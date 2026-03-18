@@ -192,6 +192,16 @@ export default function RoteirosPage() {
   } | null>(null)
   const [tamanhoRoteiroModal, setTamanhoRoteiroModal] = useState(120)
 
+  const [modalGerarRomaneios, setModalGerarRomaneios] = useState<{
+    nomeRoteiro: string
+    diaSemana: string
+    dataDia: string
+    periodoLabel: string
+    itens: Array<{ observacao?: string | null; produto_nome?: string; produto_id: number; quantidade: number; opcao_relatorio?: string | null; recheio?: string | null }>
+    empresas: string[]
+    selecionadas: string[]
+  } | null>(null)
+
   // Salvar data selecionada no localStorage quando mudar
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1544,13 +1554,28 @@ export default function RoteirosPage() {
                                           const inicioSemana = startOfWeek(dataSelecionada, { weekStartsOn: 1 })
                                           const dataDia = format(addDays(inicioSemana, DIAS_SEMANA.indexOf(diaSemana)), 'dd/MM/yyyy')
                                           const periodoLabel = periodoSelecionado === 'manha' ? 'Manhã' : 'Noite'
-                                          gerarRomaneiosPorEmpresaProducao(
-                                            nomeExibicaoRoteiro(roteiroSlot.observacoes, i) || `Roteiro ${i + 1}`,
+                                          const empresas = Array.from(
+                                            new Set(
+                                              (itensSlot || [])
+                                                .map((item) => (item.observacao || '').trim())
+                                                .filter((e) => !!e && e !== 'Sem empresa')
+                                            )
+                                          ).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
+
+                                          if (empresas.length === 0) {
+                                            toast.error('Não foi possível identificar empresas nos pedidos')
+                                            return
+                                          }
+
+                                          setModalGerarRomaneios({
+                                            nomeRoteiro: nomeExibicaoRoteiro(roteiroSlot.observacoes, i) || `Roteiro ${i + 1}`,
                                             diaSemana,
                                             dataDia,
                                             periodoLabel,
-                                            itensSlot
-                                          )
+                                            itens: itensSlot,
+                                            empresas,
+                                            selecionadas: empresas,
+                                          })
                                         }}
                                         className="bg-amber-600 text-white px-2 py-1 rounded text-xs font-semibold hover:bg-amber-700"
                                         title="Gerar um romaneio por empresa (igual aos roteiros de motorista)"
@@ -1711,6 +1736,134 @@ export default function RoteirosPage() {
       </div>
 
       {/* Modal de Renomear Roteiro */}
+      {modalGerarRomaneios && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">Gerar Romaneios</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Selecione as empresas para gerar os romaneios do roteiro <strong>{modalGerarRomaneios.nomeRoteiro}</strong>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalGerarRomaneios(null)}
+                className="px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                title="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex gap-3 flex-wrap items-center mb-4">
+              <button
+                type="button"
+                onClick={() =>
+                  setModalGerarRomaneios((prev) =>
+                    prev ? { ...prev, selecionadas: prev.empresas.slice() } : prev
+                  )
+                }
+                className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+              >
+                Selecionar todos
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setModalGerarRomaneios((prev) =>
+                    prev ? { ...prev, selecionadas: [] } : prev
+                  )
+                }
+                className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+              >
+                Limpar
+              </button>
+
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {modalGerarRomaneios.selecionadas.length} selecionada(s) de {modalGerarRomaneios.empresas.length}
+              </div>
+            </div>
+
+            <div className="max-h-[52vh] overflow-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-900/20">
+              {modalGerarRomaneios.empresas.length === 0 ? (
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Nenhuma empresa identificada nos itens.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {modalGerarRomaneios.empresas.map((empresa) => {
+                    const checked = modalGerarRomaneios.selecionadas.includes(empresa)
+                    return (
+                      <label
+                        key={empresa}
+                        className="flex items-center gap-2 text-sm select-none cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const shouldSelect = e.target.checked
+                            setModalGerarRomaneios((prev) => {
+                              if (!prev) return prev
+                              const atual = prev.selecionadas
+                              return {
+                                ...prev,
+                                selecionadas: shouldSelect
+                                  ? Array.from(new Set([...atual, empresa]))
+                                  : atual.filter((x) => x !== empresa),
+                              }
+                            })
+                          }}
+                        />
+                        <span className="text-gray-800 dark:text-gray-200">{empresa}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                type="button"
+                onClick={() => setModalGerarRomaneios(null)}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={modalGerarRomaneios.selecionadas.length === 0}
+                onClick={() => {
+                  const selecionadasSet = new Set(modalGerarRomaneios.selecionadas)
+                  const itensFiltrados = modalGerarRomaneios.itens.filter((item) => {
+                    const empresa = (item.observacao || '').trim()
+                    return selecionadasSet.has(empresa)
+                  })
+
+                  if (itensFiltrados.length === 0) {
+                    toast.error('Selecione ao menos uma empresa com itens')
+                    return
+                  }
+
+                  gerarRomaneiosPorEmpresaProducao(
+                    modalGerarRomaneios.nomeRoteiro,
+                    modalGerarRomaneios.diaSemana,
+                    modalGerarRomaneios.dataDia,
+                    modalGerarRomaneios.periodoLabel,
+                    itensFiltrados
+                  )
+                  setModalGerarRomaneios(null)
+                }}
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Gerar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {modalRenomear && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
