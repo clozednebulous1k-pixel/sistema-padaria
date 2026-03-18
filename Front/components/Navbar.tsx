@@ -160,6 +160,16 @@ export default function Navbar() {
               Relatórios
             </Link>
             <Link
+              href="/lancamentos"
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                isActive('/lancamentos')
+                  ? 'bg-primary-500 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Lançamentos
+            </Link>
+            <Link
               href="/massas"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 isActive('/massas')
