@@ -16,6 +16,14 @@ type LinhaLancamento = {
 
 type PeriodoLancamentos = 'todos' | 'matutino' | 'noturno'
 
+type RoteiroDisponivel = {
+  id: number
+  nome_empresa: string
+  motorista?: string | null
+  periodo?: string | null
+  periodoTexto: string
+}
+
 function normalizarTexto(s: string): string {
   return (s || '')
     .normalize('NFD')
@@ -34,6 +42,9 @@ export default function LancamentosPage() {
   })
 
   const [periodoSelecionado, setPeriodoSelecionado] = useState<PeriodoLancamentos>('todos')
+
+  const [roteirosDisponiveis, setRoteirosDisponiveis] = useState<RoteiroDisponivel[]>([])
+  const [roteirosSelecionados, setRoteirosSelecionados] = useState<number[]>([])
 
   const [empresasDisponiveis, setEmpresasDisponiveis] = useState<string[]>([])
   const [empresasSelecionadas, setEmpresasSelecionadas] = useState<string[]>([])
@@ -58,6 +69,14 @@ export default function LancamentosPage() {
     return 'todos'
   }
 
+  const periodoTextoRoteiro = (periodoDb: string | null | undefined): string => {
+    const p = (periodoDb || '').trim().toLowerCase()
+    if (!p) return 'Sem período'
+    if (p === 'matutino' || p === 'manha') return 'Manhã'
+    if (p === 'noturno' || p === 'noite') return 'Noite'
+    return 'Sem período'
+  }
+
   const carregarEmpresasDisponiveisParaData = async () => {
     if (!dataSelecionada) return
     try {
@@ -65,29 +84,41 @@ export default function LancamentosPage() {
       setCarregado(false)
       setLinhas([])
 
-      // 1) Pegamos roteiros por data e filtramos apenas os de entrega (motorista preenchido)
+      // 1) Pegamos roteiros por dia (e período quando aplicável)
       const roteirosDoDia = await roteiroApi.listar({ data_producao: dataSelecionada })
-      const roteirosEntrega = roteirosDoDia.filter((r) => {
-        if (!r.motorista || r.motorista.trim() === '') return false
+      const roteirosParaConsiderar = roteirosDoDia.filter((r) => {
         if (periodoSelecionado === 'todos') return true
         // Se não tiver período no roteiro, considera que aparece tanto em Manhã quanto em Noite
         if (!r.periodo || r.periodo.trim() === '') return true
         return periodoAceitoParaFiltro(r.periodo) === periodoSelecionado
       })
 
-      // 2) Para cada roteiro, buscamos os itens
+      setRoteirosDisponiveis(
+        roteirosParaConsiderar
+          .slice()
+          .sort((a, b) => (a.motorista || '').localeCompare(b.motorista || '', 'pt-BR'))
+          .map((r) => ({
+            id: r.id,
+            nome_empresa: r.nome_empresa,
+            motorista: r.motorista ?? null,
+            periodo: r.periodo ?? null,
+            periodoTexto: periodoTextoRoteiro(r.periodo),
+          })),
+      )
+      setRoteirosSelecionados(roteirosParaConsiderar.map((r) => r.id))
+
+      // 2) Para cada roteiro selecionado, buscamos os itens
       const roteirosComItens = await Promise.all(
-        roteirosEntrega.map((r) => roteiroApi.buscar(r.id))
+        roteirosParaConsiderar.map((r) => roteiroApi.buscar(r.id))
       )
 
-      // 3) Extraímos as empresas que aparecem nos itens (observacao guarda o nome da empresa)
+      // 3) Extraímos as empresas que aparecem nos itens
       const empresasSet = new Set<string>()
       roteirosComItens.forEach((r) => {
-        const empresaRoteiro = (r.nome_empresa || '').trim()
         ;(r.itens || []).forEach((item) => {
           const empresaItem = (item.observacao || '').trim()
-          const empresa = (empresaItem || empresaRoteiro).trim()
-          if (empresa && empresa !== 'Sem empresa') empresasSet.add(empresa)
+          const empresa = (empresaItem || (r.nome_empresa || '') || 'Sem empresa').trim()
+          if (empresa) empresasSet.add(empresa)
         })
       })
 
@@ -96,9 +127,8 @@ export default function LancamentosPage() {
       )
 
       setEmpresasDisponiveis(lista)
-
-      // Se já tiver seleção, mantém apenas as empresas que existem nessa data
-      setEmpresasSelecionadas((prev) => prev.filter((e) => empresasSet.has(e)))
+      // Padrão: seleciona todas para facilitar o uso
+      setEmpresasSelecionadas(lista)
     } catch (e) {
       console.error(e)
       toast.error('Erro ao carregar empresas disponíveis')
@@ -114,8 +144,8 @@ export default function LancamentosPage() {
       toast.error('Informe a data')
       return
     }
-    if (!empresasSelecionadas || empresasSelecionadas.length === 0) {
-      toast.error('Selecione pelo menos uma empresa')
+    if (!roteirosSelecionados || roteirosSelecionados.length === 0) {
+      toast.error('Selecione pelo menos um roteiro')
       return
     }
 
@@ -123,41 +153,28 @@ export default function LancamentosPage() {
       setLoading(true)
       setCarregado(true)
 
-      // 1) Pegamos roteiros por data e filtramos apenas os de entrega (motorista preenchido)
-      const roteirosDoDia = await roteiroApi.listar({ data_producao: dataSelecionada })
-      const roteirosEntrega = roteirosDoDia.filter((r) => {
-        if (!r.motorista || r.motorista.trim() === '') return false
-        if (periodoSelecionado === 'todos') return true
-        // Se não tiver período no roteiro, considera que aparece tanto em Manhã quanto em Noite
-        if (!r.periodo || r.periodo.trim() === '') return true
-        return periodoAceitoParaFiltro(r.periodo) === periodoSelecionado
-      })
+      // 1) Para cada roteiro selecionado, buscamos os itens
+      const roteirosComItens = await Promise.all(roteirosSelecionados.map((id) => roteiroApi.buscar(id)))
 
-      // 2) Para cada roteiro, buscamos os itens
-      const roteirosComItens = await Promise.all(
-        roteirosEntrega.map((r) => roteiroApi.buscar(r.id))
-      )
-
-      // 3) Filtra itens pelas empresas selecionadas (observacao guarda o nome da empresa)
+      // 2) Filtra itens pelas empresas selecionadas (se houver)
       const empresasSelecionadasNorm = new Set(empresasSelecionadas.map(normalizarTexto))
+      const filtrarPorEmpresa = empresasSelecionadasNorm.size > 0
       const itensSelecionadosComEmpresa: Array<{ item: any; empresa: string }> = []
+
       roteirosComItens.forEach((r) => {
-        const empresaRoteiro = (r.nome_empresa || '').trim()
         ;(r.itens || []).forEach((item) => {
           const empresaItem = (item.observacao || '').trim()
-          const empresa = (empresaItem || empresaRoteiro).trim()
-          if (!empresa || empresa === 'Sem empresa') return
-          const empresaNorm = normalizarTexto(empresa)
-          if (empresasSelecionadasNorm.has(empresaNorm)) {
-            itensSelecionadosComEmpresa.push({ item, empresa })
-          }
+          const empresa = (empresaItem || (r.nome_empresa || '') || 'Sem empresa').trim()
+          if (!empresa) return
+          if (filtrarPorEmpresa && !empresasSelecionadasNorm.has(normalizarTexto(empresa))) return
+          itensSelecionadosComEmpresa.push({ item, empresa })
         })
       })
 
       // 4) Agrega por empresa e por pão (pão + recheio + opção)
       const linhasMap = new Map<string, LinhaLancamento>()
       itensSelecionadosComEmpresa.forEach(({ item, empresa }) => {
-        if (!empresa || empresa === 'Sem empresa') return
+        if (!empresa) return
 
         const pao = `${item.produto_nome || `ID: ${item.produto_id}`}${item.recheio ? ` ${item.recheio}` : ''}${
           item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : ''
@@ -325,7 +342,7 @@ export default function LancamentosPage() {
             <button
               type="button"
               onClick={buscarLancamentos}
-              disabled={loading || empresasSelecionadas.length === 0}
+              disabled={loading || roteirosSelecionados.length === 0}
               className="px-5 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Buscando...' : 'Buscar'}
@@ -376,6 +393,68 @@ export default function LancamentosPage() {
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 {empresasSelecionadas.length} selecionada(s)
               </div>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-3 items-end justify-between mb-2">
+              <div className="min-w-[260px] flex-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Roteiros disponíveis nesse dia
+                </label>
+              </div>
+              <div className="flex gap-2 items-center">
+                <button
+                  type="button"
+                  disabled={roteirosDisponiveis.length === 0}
+                  onClick={() => setRoteirosSelecionados(roteirosDisponiveis.map((r) => r.id))}
+                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  Selecionar todos
+                </button>
+                <button
+                  type="button"
+                  disabled={roteirosSelecionados.length === 0}
+                  onClick={() => setRoteirosSelecionados([])}
+                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  Limpar
+                </button>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {roteirosSelecionados.length} selecionado(s)
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-2 max-h-[22vh] overflow-auto rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/20 p-3">
+              {carregandoEmpresasDisponiveis ? (
+                <div className="text-sm text-gray-600 dark:text-gray-400">Carregando roteiros...</div>
+              ) : roteirosDisponiveis.length === 0 ? (
+                <div className="text-sm text-gray-600 dark:text-gray-400">Nenhum roteiro disponível para essa data.</div>
+              ) : (
+                <div className="space-y-2">
+                  {roteirosDisponiveis.map((r) => {
+                    const checked = roteirosSelecionados.includes(r.id)
+                    const rotLabel = `${r.id} · ${r.motorista ? `Motorista: ${r.motorista}` : 'Sem motorista'} · ${r.periodoTexto}`
+                    return (
+                      <label key={r.id} className="flex items-center gap-2 text-sm select-none cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const shouldSelect = e.target.checked
+                            setRoteirosSelecionados((prev) => {
+                              if (shouldSelect) return Array.from(new Set([...prev, r.id]))
+                              return prev.filter((x) => x !== r.id)
+                            })
+                          }}
+                        />
+                        <span className="text-gray-900 dark:text-gray-100">{rotLabel}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
