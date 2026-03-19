@@ -83,8 +83,10 @@ export default function LancamentosPage() {
       // 3) Extraímos as empresas que aparecem nos itens (observacao guarda o nome da empresa)
       const empresasSet = new Set<string>()
       roteirosComItens.forEach((r) => {
+        const empresaRoteiro = (r.nome_empresa || '').trim()
         ;(r.itens || []).forEach((item) => {
-          const empresa = (item.observacao || '').trim()
+          const empresaItem = (item.observacao || '').trim()
+          const empresa = (empresaItem || empresaRoteiro).trim()
           if (empresa && empresa !== 'Sem empresa') empresasSet.add(empresa)
         })
       })
@@ -138,15 +140,23 @@ export default function LancamentosPage() {
 
       // 3) Filtra itens pelas empresas selecionadas (observacao guarda o nome da empresa)
       const empresasSelecionadasNorm = new Set(empresasSelecionadas.map(normalizarTexto))
-      const itensSelecionados = roteirosComItens.flatMap((r) => r.itens || []).filter((item) => {
-        const empresaNorm = normalizarTexto(item.observacao || '')
-        return empresasSelecionadasNorm.has(empresaNorm)
+      const itensSelecionadosComEmpresa: Array<{ item: any; empresa: string }> = []
+      roteirosComItens.forEach((r) => {
+        const empresaRoteiro = (r.nome_empresa || '').trim()
+        ;(r.itens || []).forEach((item) => {
+          const empresaItem = (item.observacao || '').trim()
+          const empresa = (empresaItem || empresaRoteiro).trim()
+          if (!empresa || empresa === 'Sem empresa') return
+          const empresaNorm = normalizarTexto(empresa)
+          if (empresasSelecionadasNorm.has(empresaNorm)) {
+            itensSelecionadosComEmpresa.push({ item, empresa })
+          }
+        })
       })
 
       // 4) Agrega por empresa e por pão (pão + recheio + opção)
       const linhasMap = new Map<string, LinhaLancamento>()
-      itensSelecionados.forEach((item) => {
-        const empresa = (item.observacao || '').trim()
+      itensSelecionadosComEmpresa.forEach(({ item, empresa }) => {
         if (!empresa || empresa === 'Sem empresa') return
 
         const pao = `${item.produto_nome || `ID: ${item.produto_id}`}${item.recheio ? ` ${item.recheio}` : ''}${
