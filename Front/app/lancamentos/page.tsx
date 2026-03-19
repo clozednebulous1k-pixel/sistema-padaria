@@ -319,12 +319,6 @@ export default function LancamentosPage() {
         )
 
         setEmpresasDisponiveis(lista)
-        setEmpresasSelecionadas((prev) => {
-          const prevSet = new Set(prev)
-          const interseccao = lista.filter((e) => prevSet.has(e))
-          // Se usuário tinha algo selecionado e ainda é válido, mantém; caso contrário seleciona tudo disponível
-          return interseccao.length > 0 ? interseccao : lista
-        })
       } catch (e) {
         console.error(e)
         toast.error('Erro ao carregar empresas disponíveis (roteiros selecionados)')
@@ -484,7 +478,7 @@ export default function LancamentosPage() {
                 <div className="space-y-2">
                   {roteirosDisponiveis.map((r) => {
                     const checked = roteirosSelecionados.includes(r.id)
-                    const nomeRoteiro = `${(r.motorista || r.nome_empresa || '').trim() || 'Sem nome'}`
+                    const nomeRoteiro = `${(r.nome_empresa || r.motorista || '').trim() || 'Sem nome'}`
                     const rotLabel = `${nomeRoteiro} · ${r.periodoTexto}`
                     return (
                       <label key={r.id} className="flex items-center gap-2 text-sm select-none cursor-pointer">
