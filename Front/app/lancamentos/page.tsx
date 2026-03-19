@@ -458,7 +458,7 @@ export default function LancamentosPage() {
             </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-3 rounded-lg border border-primary-200 dark:border-primary-900/30 bg-primary-50/20 dark:bg-primary-900/10 p-3">
             <div className="flex flex-wrap gap-3 items-end justify-between mb-2">
               <div className="min-w-[260px] flex-1">
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -470,7 +470,7 @@ export default function LancamentosPage() {
                   type="button"
                   disabled={roteirosDisponiveis.length === 0}
                   onClick={() => setRoteirosSelecionados(roteirosDisponiveis.map((r) => r.id))}
-                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="px-3 py-2 bg-primary-100/70 dark:bg-primary-900/40 text-primary-900 dark:text-primary-100 rounded-lg font-semibold hover:bg-primary-200/80 dark:hover:bg-primary-900/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   Selecionar todos
                 </button>
@@ -478,17 +478,17 @@ export default function LancamentosPage() {
                   type="button"
                   disabled={roteirosSelecionados.length === 0}
                   onClick={() => setRoteirosSelecionados([])}
-                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="px-3 py-2 bg-primary-100/70 dark:bg-primary-900/40 text-primary-900 dark:text-primary-100 rounded-lg font-semibold hover:bg-primary-200/80 dark:hover:bg-primary-900/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   Limpar
                 </button>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-primary-700 dark:text-primary-200">
                   {roteirosSelecionados.length} selecionado(s)
                 </div>
               </div>
             </div>
 
-            <div className="mt-2 max-h-[22vh] overflow-auto rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/20 p-3">
+            <div className="mt-2 max-h-[22vh] overflow-auto rounded-lg border border-primary-200 dark:border-primary-900/30 bg-primary-50/40 dark:bg-primary-900/15 p-3">
               {carregandoEmpresasDisponiveis ? (
                 <div className="text-sm text-gray-600 dark:text-gray-400">Carregando roteiros...</div>
               ) : roteirosDisponiveis.length === 0 ? (
