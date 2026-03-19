@@ -70,6 +70,8 @@ export default function LancamentosPage() {
       const roteirosEntrega = roteirosDoDia.filter((r) => {
         if (!r.motorista || r.motorista.trim() === '') return false
         if (periodoSelecionado === 'todos') return true
+        // Se não tiver período no roteiro, considera que aparece tanto em Manhã quanto em Noite
+        if (!r.periodo || r.periodo.trim() === '') return true
         return periodoAceitoParaFiltro(r.periodo) === periodoSelecionado
       })
 
@@ -124,6 +126,8 @@ export default function LancamentosPage() {
       const roteirosEntrega = roteirosDoDia.filter((r) => {
         if (!r.motorista || r.motorista.trim() === '') return false
         if (periodoSelecionado === 'todos') return true
+        // Se não tiver período no roteiro, considera que aparece tanto em Manhã quanto em Noite
+        if (!r.periodo || r.periodo.trim() === '') return true
         return periodoAceitoParaFiltro(r.periodo) === periodoSelecionado
       })
 
