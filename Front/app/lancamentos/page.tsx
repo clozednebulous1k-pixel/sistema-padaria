@@ -22,6 +22,7 @@ type RoteiroDisponivel = {
   motorista?: string | null
   periodo?: string | null
   periodoTexto: string
+  observacoes?: string | null
 }
 
 function normalizarTexto(s: string): string {
@@ -77,6 +78,20 @@ export default function LancamentosPage() {
     return 'Sem período'
   }
 
+  const extrairNumeroRoteiroDaObservacao = (obs: string | null | undefined): number | null => {
+    if (!obs) return null
+    const match = String(obs).match(/Roteiro\s*(\d+)/i)
+    return match ? parseInt(match[1], 10) : null
+  }
+
+  const rotLabel = (r: RoteiroDisponivel): string => {
+    const n = extrairNumeroRoteiroDaObservacao(r.observacoes)
+    if (n) return `Roteiro ${n} · ${r.periodoTexto}`
+    if (r.observacoes && r.observacoes.trim()) return `${r.observacoes.trim()} · ${r.periodoTexto}`
+    const nome = (r.nome_empresa || r.motorista || '').trim()
+    return `${nome || 'Sem nome'} · ${r.periodoTexto}`
+  }
+
   const carregarEmpresasDisponiveisParaData = async () => {
     if (!dataSelecionada) return
     try {
@@ -103,6 +118,7 @@ export default function LancamentosPage() {
             motorista: r.motorista ?? null,
             periodo: r.periodo ?? null,
             periodoTexto: periodoTextoRoteiro(r.periodo),
+            observacoes: r.observacoes ?? null,
           })),
       )
       setRoteirosSelecionados(roteirosParaConsiderar.map((r) => r.id))
@@ -319,6 +335,9 @@ export default function LancamentosPage() {
         )
 
         setEmpresasDisponiveis(lista)
+        // Sempre marque automaticamente as empresas disponíveis pelos roteiros selecionados.
+        // Mantém as seleções anteriores e adiciona as novas.
+        setEmpresasSelecionadas((prev) => Array.from(new Set([...prev, ...lista])))
       } catch (e) {
         console.error(e)
         toast.error('Erro ao carregar empresas disponíveis (roteiros selecionados)')
@@ -478,8 +497,7 @@ export default function LancamentosPage() {
                 <div className="space-y-2">
                   {roteirosDisponiveis.map((r) => {
                     const checked = roteirosSelecionados.includes(r.id)
-                    const nomeRoteiro = `${(r.nome_empresa || r.motorista || '').trim() || 'Sem nome'}`
-                    const rotLabel = `${nomeRoteiro} · ${r.periodoTexto}`
+                    const label = rotLabel(r)
                     return (
                       <label key={r.id} className="flex items-center gap-2 text-sm select-none cursor-pointer">
                         <input
@@ -493,7 +511,7 @@ export default function LancamentosPage() {
                             })
                           }}
                         />
-                        <span className="text-gray-900 dark:text-gray-100">{rotLabel}</span>
+                        <span className="text-gray-900 dark:text-gray-100">{label}</span>
                       </label>
                     )
                   })}
