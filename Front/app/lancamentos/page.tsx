@@ -51,6 +51,13 @@ export default function LancamentosPage() {
     return 'Todos'
   }
 
+  const periodoAceitoParaFiltro = (periodoDb: string | null | undefined): PeriodoLancamentos => {
+    const p = (periodoDb || '').trim().toLowerCase()
+    if (p === 'matutino' || p === 'manha') return 'matutino'
+    if (p === 'noturno' || p === 'noite') return 'noturno'
+    return 'todos'
+  }
+
   const carregarEmpresasDisponiveisParaData = async () => {
     if (!dataSelecionada) return
     try {
@@ -58,16 +65,17 @@ export default function LancamentosPage() {
       setCarregado(false)
       setLinhas([])
 
-      // 1) Pegamos roteiros por data e filtramos apenas os de produção (motorista vazio)
-      const roteirosDoDia = await roteiroApi.listar({
-        data_producao: dataSelecionada,
-        ...(periodoSelecionado !== 'todos' ? { periodo: periodoSelecionado } : {}),
+      // 1) Pegamos roteiros por data e filtramos apenas os de entrega (motorista preenchido)
+      const roteirosDoDia = await roteiroApi.listar({ data_producao: dataSelecionada })
+      const roteirosEntrega = roteirosDoDia.filter((r) => {
+        if (!r.motorista || r.motorista.trim() === '') return false
+        if (periodoSelecionado === 'todos') return true
+        return periodoAceitoParaFiltro(r.periodo) === periodoSelecionado
       })
-      const roteirosProducao = roteirosDoDia.filter((r) => !r.motorista || r.motorista.trim() === '')
 
       // 2) Para cada roteiro, buscamos os itens
       const roteirosComItens = await Promise.all(
-        roteirosProducao.map((r) => roteiroApi.buscar(r.id))
+        roteirosEntrega.map((r) => roteiroApi.buscar(r.id))
       )
 
       // 3) Extraímos as empresas que aparecem nos itens (observacao guarda o nome da empresa)
@@ -111,16 +119,17 @@ export default function LancamentosPage() {
       setLoading(true)
       setCarregado(true)
 
-      // 1) Pegamos roteiros por data e filtramos apenas os de produção (motorista vazio)
-      const roteirosDoDia = await roteiroApi.listar({
-        data_producao: dataSelecionada,
-        ...(periodoSelecionado !== 'todos' ? { periodo: periodoSelecionado } : {}),
+      // 1) Pegamos roteiros por data e filtramos apenas os de entrega (motorista preenchido)
+      const roteirosDoDia = await roteiroApi.listar({ data_producao: dataSelecionada })
+      const roteirosEntrega = roteirosDoDia.filter((r) => {
+        if (!r.motorista || r.motorista.trim() === '') return false
+        if (periodoSelecionado === 'todos') return true
+        return periodoAceitoParaFiltro(r.periodo) === periodoSelecionado
       })
-      const roteirosProducao = roteirosDoDia.filter((r) => !r.motorista || r.motorista.trim() === '')
 
       // 2) Para cada roteiro, buscamos os itens
       const roteirosComItens = await Promise.all(
-        roteirosProducao.map((r) => roteiroApi.buscar(r.id))
+        roteirosEntrega.map((r) => roteiroApi.buscar(r.id))
       )
 
       // 3) Filtra itens pelas empresas selecionadas (observacao guarda o nome da empresa)
