@@ -28,6 +28,7 @@ class RoteiroItemModel {
         ri.*,
         p.nome as produto_nome,
         p.descricao as produto_descricao,
+        p.tipo_massa as tipo_massa,
         p.opcao_relatorio as opcao_relatorio,
         p.recheio as recheio
       FROM roteiro_itens_padaria ri

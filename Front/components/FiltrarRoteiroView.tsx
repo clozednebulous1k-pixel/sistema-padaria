@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { roteiroApi, produtoApi, Produto, Roteiro } from '@/lib/api'
 import toast from 'react-hot-toast'
@@ -78,6 +78,8 @@ export default function FiltrarRoteiroView() {
   const [buscaEmpresa, setBuscaEmpresa] = useState('')
   const [mostrarRoteiroMassaDoceCliente, setMostrarRoteiroMassaDoceCliente] = useState(false)
   const [mostrarRoteiroMassaSalgadaCliente, setMostrarRoteiroMassaSalgadaCliente] = useState(false)
+  const painelRecheioRef = useRef<HTMLDivElement>(null)
+  const mostrarFiltroRecheioAnterior = useRef(false)
 
   useEffect(() => {
     carregarPedidosDoDia()
@@ -148,17 +150,22 @@ export default function FiltrarRoteiroView() {
 
   const pedidosDoDia = useMemo(() => {
     if (roteirosDoDiaComItens.length === 0 || produtosAtivos.length === 0) return []
-    const produtosMap = new Map(produtosAtivos.map((p) => [p.id, p]))
+    const produtosMap = new Map(
+      produtosAtivos.map((p) => [p.id, p] as const)
+    )
     const roteirosFiltrados = roteirosDoDiaComItens.filter((r) => roteirosSelecionados.has(r.id))
     const agregado = new Map<string, PedidoFiltro>()
     roteirosFiltrados.forEach((roteiro) => {
       roteiro.itens?.forEach((item) => {
         const empresa = (item.observacao || roteiro.nome_empresa || '').trim() || 'Sem empresa'
         const produtoNome = item.produto_nome || `Produto ${item.produto_id}`
-        const produto = produtosMap.get(item.produto_id)
-        const tipoMassa = produto?.tipo_massa ?? null
-        const opcaoRelatorio = produto?.opcao_relatorio ?? null
-        const recheio = produto?.recheio ?? null
+        const pid = Number(item.produto_id)
+        const produto =
+          produtosMap.get(item.produto_id) ?? (Number.isFinite(pid) ? produtosMap.get(pid) : undefined)
+        // Dados do item vêm do JOIN com produtos na API (funciona mesmo se o produto estiver inativo e fora da lista).
+        const tipoMassa = produto?.tipo_massa ?? item.tipo_massa ?? null
+        const opcaoRelatorio = produto?.opcao_relatorio ?? item.opcao_relatorio ?? null
+        const recheio = produto?.recheio ?? item.recheio ?? null
         const key = `${empresa}|${item.produto_id}`
         const qtd = Number(item.quantidade) || 0
         if (agregado.has(key)) {
@@ -218,11 +225,58 @@ export default function FiltrarRoteiroView() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
   }, [pedidosDoDia])
 
-  const recheiosFiltrados = useMemo(() => {
+  const temMassaDoce =
+    massasSelecionadas.has('Massa Doce') || mostrarRoteiroMassaDoceCliente
+  const temMassaSalgada =
+    massasSelecionadas.has('Massa Salgada') || mostrarRoteiroMassaSalgadaCliente
+  const mostrarFiltroRecheio = temMassaDoce || temMassaSalgada
+
+  /** Recheios só dos pedidos de Massa Doce / Massa Salgada conforme o que está ativo */
+  const recheiosUnicosEscopo = useMemo(() => {
+    if (!temMassaDoce && !temMassaSalgada) return [] as string[]
+    const set = new Set<string>()
+    pedidosDoDia.forEach((p) => {
+      const tm = p.tipo_massa
+      if (!tm) return
+      if (tm === 'Massa Doce' && !temMassaDoce) return
+      if (tm === 'Massa Salgada' && !temMassaSalgada) return
+      if (tm !== 'Massa Doce' && tm !== 'Massa Salgada') return
+      const r = (p.recheio || '').trim()
+      if (r) set.add(r)
+    })
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
+  }, [pedidosDoDia, temMassaDoce, temMassaSalgada])
+
+  const recheiosFiltradosEscopo = useMemo(() => {
     const termo = normalizarParaBusca(buscaRecheio)
-    if (!termo) return recheiosUnicos
-    return recheiosUnicos.filter((r) => normalizarParaBusca(r).includes(termo))
-  }, [recheiosUnicos, buscaRecheio])
+    if (!termo) return recheiosUnicosEscopo
+    return recheiosUnicosEscopo.filter((r) => normalizarParaBusca(r).includes(termo))
+  }, [recheiosUnicosEscopo, buscaRecheio])
+
+  useEffect(() => {
+    if (!mostrarFiltroRecheio) {
+      setRecheiosSelecionados(new Set())
+    }
+  }, [mostrarFiltroRecheio])
+
+  useEffect(() => {
+    if (!mostrarFiltroRecheio) return
+    setRecheiosSelecionados((prev) => {
+      const next = new Set([...prev].filter((r) => recheiosUnicosEscopo.includes(r)))
+      if (next.size === prev.size && [...prev].every((r) => next.has(r))) return prev
+      return next
+    })
+  }, [recheiosUnicosEscopo, mostrarFiltroRecheio])
+
+  useEffect(() => {
+    const abriu = mostrarFiltroRecheio && !mostrarFiltroRecheioAnterior.current
+    mostrarFiltroRecheioAnterior.current = mostrarFiltroRecheio
+    if (!abriu) return
+    const id = requestAnimationFrame(() => {
+      painelRecheioRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [mostrarFiltroRecheio])
 
   const quantidadePorMassa = useMemo(() => {
     const map = new Map<string, number>()
@@ -301,12 +355,14 @@ export default function FiltrarRoteiroView() {
   }
 
   const selecionarTodasRecheios = () => {
-    if (recheiosSelecionados.size === recheiosUnicos.length) {
+    const lista = recheiosUnicosEscopo
+    if (lista.length === 0) return
+    if (recheiosSelecionados.size === lista.length && lista.every((r) => recheiosSelecionados.has(r))) {
       setRecheiosSelecionados(new Set())
       setEmpresasSelecionadas(new Set())
       setTodasEmpresasDesmarcadas(false)
     } else {
-      setRecheiosSelecionados(new Set(recheiosUnicos))
+      setRecheiosSelecionados(new Set(lista))
     }
   }
 
@@ -1075,6 +1131,65 @@ export default function FiltrarRoteiroView() {
                 ))
               )}
             </div>
+
+            {mostrarFiltroRecheio && (
+              <div
+                ref={painelRecheioRef}
+                className="mt-5 pt-5 border-t border-gray-200 dark:border-gray-600"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                    Filtrar por recheio
+                  </h3>
+                  {recheiosUnicosEscopo.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={selecionarTodasRecheios}
+                      className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      {recheiosSelecionados.size === recheiosUnicosEscopo.length &&
+                      recheiosUnicosEscopo.length > 0
+                        ? 'Desmarcar todos'
+                        : 'Marcar todos'}
+                    </button>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  Aparece ao marcar <strong>Massa Doce</strong> ou <strong>Massa Salgada</strong> (ou ao abrir os roteiros Cliente). Só listamos recheios desses pães do dia.
+                </p>
+                <input
+                  type="text"
+                  placeholder="Pesquisar recheio..."
+                  value={buscaRecheio}
+                  onChange={(e) => setBuscaRecheio(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm mb-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+                <div className="flex flex-wrap gap-3">
+                  {recheiosFiltradosEscopo.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 py-1">
+                      {buscaRecheio.trim()
+                        ? 'Nenhum recheio encontrado.'
+                        : 'Nenhum recheio cadastrado nesses pães (Massa Doce/Salgada) neste dia.'}
+                    </p>
+                  ) : (
+                    recheiosFiltradosEscopo.map((recheio) => (
+                      <label
+                        key={recheio}
+                        className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={recheiosSelecionados.has(recheio)}
+                          onChange={() => toggleRecheio(recheio)}
+                          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{recheio}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {mostrarRoteiroMassaDoceCliente && (
@@ -1194,57 +1309,6 @@ export default function FiltrarRoteiroView() {
               )}
             </div>
           )}
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                Filtrar por recheio
-              </h2>
-              {recheiosUnicos.length > 0 && (
-                <button
-                  type="button"
-                  onClick={selecionarTodasRecheios}
-                  className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  {recheiosSelecionados.size === recheiosUnicos.length ? 'Desmarcar todos' : 'Marcar todos'}
-                </button>
-              )}
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Marque os recheios para restringir o roteiro (ex.: margarina no recheio ou na opção de relatório). Com algum recheio marcado, só entram linhas que tenham esse recheio cadastrado no produto.
-            </p>
-            <input
-              type="text"
-              placeholder="Pesquisar recheio..."
-              value={buscaRecheio}
-              onChange={(e) => setBuscaRecheio(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm mb-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-            <div className="flex flex-wrap gap-3">
-              {recheiosFiltrados.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 py-1">
-                  {buscaRecheio.trim()
-                    ? 'Nenhum recheio encontrado.'
-                    : 'Nenhum recheio distinto no dia (cadastre recheio nos produtos).'}
-                </p>
-              ) : (
-                recheiosFiltrados.map((recheio) => (
-                  <label
-                    key={recheio}
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={recheiosSelecionados.has(recheio)}
-                      onChange={() => toggleRecheio(recheio)}
-                      className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                    />
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{recheio}</span>
-                  </label>
-                ))
-              )}
-            </div>
-          </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-3">

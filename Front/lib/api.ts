@@ -89,6 +89,7 @@ export interface RoteiroItemResponse {
   observacao: string | null;
   criado_em: string;
   produto_nome?: string;
+  tipo_massa?: string | null;
   opcao_relatorio?: string | null;
   recheio?: string | null;
 }
