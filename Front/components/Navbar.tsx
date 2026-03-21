@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
+import { SaveAwareLink } from '@/components/NavigationSaveProvider'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from './AuthProvider'
@@ -63,7 +63,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         {/* Primeira linha: Logo, Título, Usuário e Sair */}
         <div className="flex items-center justify-between h-12 border-b border-gray-200 dark:border-gray-700">
-          <Link href="/" className="flex items-center space-x-2">
+          <SaveAwareLink href="/" className="flex items-center space-x-2">
             <div className="relative w-8 h-8 flex items-center justify-center">
               <Image
                 src="/logo.png"
@@ -76,7 +76,7 @@ export default function Navbar() {
               />
             </div>
             <span className="text-base font-bold text-gray-900 dark:text-gray-100 hidden sm:block">Belfort Pães e Doces</span>
-          </Link>
+          </SaveAwareLink>
 
           {/* Modo Noturno, Backup, Usuário e Sair */}
           {usuario && (
@@ -109,7 +109,7 @@ export default function Navbar() {
         {/* Segunda linha: Links de navegação centralizados */}
         <div className="flex justify-center py-2 bg-white dark:bg-gray-900 shadow-sm">
           <div className="flex flex-wrap justify-center gap-1">
-            <Link
+            <SaveAwareLink
               href="/"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 isActive('/') && pathname === '/'
@@ -118,8 +118,8 @@ export default function Navbar() {
               }`}
             >
               Início
-            </Link>
-            <Link
+            </SaveAwareLink>
+            <SaveAwareLink
               href="/produtos"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 isActive('/produtos')
@@ -128,8 +128,8 @@ export default function Navbar() {
               }`}
             >
               Produtos
-            </Link>
-            <Link
+            </SaveAwareLink>
+            <SaveAwareLink
               href="/empresas"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 isActive('/empresas')
@@ -138,8 +138,8 @@ export default function Navbar() {
               }`}
             >
               Cadastro Empresas
-            </Link>
-            <Link
+            </SaveAwareLink>
+            <SaveAwareLink
               href="/roteiros"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 isActive('/roteiros') && !pathname?.startsWith('/roteiros/historico') && pathname !== '/roteiros/filtrar'
@@ -148,8 +148,8 @@ export default function Navbar() {
               }`}
             >
               Roteiros de Entregas
-            </Link>
-            <Link
+            </SaveAwareLink>
+            <SaveAwareLink
               href="/roteiros/filtrar"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 pathname === '/roteiros/filtrar'
@@ -158,8 +158,8 @@ export default function Navbar() {
               }`}
             >
               Relatórios
-            </Link>
-            <Link
+            </SaveAwareLink>
+            <SaveAwareLink
               href="/lancamentos"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 isActive('/lancamentos')
@@ -168,8 +168,8 @@ export default function Navbar() {
               }`}
             >
               Lançamentos
-            </Link>
-            <Link
+            </SaveAwareLink>
+            <SaveAwareLink
               href="/massas"
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 isActive('/massas')
@@ -178,7 +178,7 @@ export default function Navbar() {
               }`}
             >
               Listas de Massas
-            </Link>
+            </SaveAwareLink>
             <div className="relative" ref={menuRef}>
               <button
                 onClick={(e) => {
@@ -197,36 +197,36 @@ export default function Navbar() {
               </button>
               {menuAberto && (
                 <div className="absolute left-0 mt-1 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                  <Link
+                  <SaveAwareLink
                     href="/usuarios"
                     onClick={() => setMenuAberto(false)}
                     className={`block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${isActive('/usuarios') ? 'text-primary-600 dark:text-primary-400 font-semibold bg-primary-50 dark:bg-primary-900/30' : 'text-gray-700 dark:text-gray-300'}`}
                   >
                     Usuários
-                  </Link>
-                  <Link
+                  </SaveAwareLink>
+                  <SaveAwareLink
                     href="/roteiros/historico"
                     onClick={() => setMenuAberto(false)}
                     className={`block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${isActive('/roteiros/historico') ? 'text-primary-600 dark:text-primary-400 font-semibold bg-primary-50 dark:bg-primary-900/30' : 'text-gray-700 dark:text-gray-300'}`}
                   >
                     Histórico
-                  </Link>
+                  </SaveAwareLink>
                   {isAdmin && (
                     <>
-                      <Link
+                      <SaveAwareLink
                         href="/lixeira"
                         onClick={() => setMenuAberto(false)}
                         className={`block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${isActive('/lixeira') ? 'text-primary-600 dark:text-primary-400 font-semibold bg-primary-50 dark:bg-primary-900/30' : 'text-gray-700 dark:text-gray-300'}`}
                       >
                         Restauração
-                      </Link>
-                      <Link
+                      </SaveAwareLink>
+                      <SaveAwareLink
                         href="/auditoria"
                         onClick={() => setMenuAberto(false)}
                         className={`block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${isActive('/auditoria') ? 'text-primary-600 dark:text-primary-400 font-semibold bg-primary-50 dark:bg-primary-900/30' : 'text-gray-700 dark:text-gray-300'}`}
                       >
                         Monitoramento
-                      </Link>
+                      </SaveAwareLink>
                     </>
                   )}
                 </div>

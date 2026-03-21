@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useState, useEffect } from 'react'
+import { useRegisterNavigationSave } from '@/components/NavigationSaveProvider'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { roteiroApi, produtoApi, empresaApi, Produto, RoteiroItem, Roteiro } from '@/lib/api'
@@ -53,9 +54,10 @@ function NovoRoteiroContent() {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
     watch,
     setValue,
+    reset,
   } = useForm<FormData>({
     defaultValues: {
       itens: [{ nome_empresa: '', produto_id: 0, quantidade: 1 }],
@@ -213,85 +215,91 @@ function NovoRoteiroContent() {
     }
   }
 
-  const onSubmit = async (data: FormData) => {
-    registrarClique(
-      roteiroExistente ? 'Adicionar Pedidos' : 'Criar Roteiro',
-      'Roteiros',
-      'Novo Roteiro',
-      'roteiro',
-      roteiroExistente?.id,
-      `Dia: ${diaParam}, Período: ${periodoParam}`
-    )
-    
+  const persistNovoRoteiro = async (data: FormData, mode: 'submit' | 'auto') => {
+    const fail = (message: string) => {
+      toast.error(message)
+      if (mode === 'auto') throw new Error('VALIDATION')
+    }
+
+    if (mode === 'submit') {
+      registrarClique(
+        roteiroExistente ? 'Adicionar Pedidos' : 'Criar Roteiro',
+        'Roteiros',
+        'Novo Roteiro',
+        'roteiro',
+        roteiroExistente?.id,
+        `Dia: ${diaParam}, Período: ${periodoParam}`
+      )
+    }
+
     if (!diaParam) {
-      toast.error('Dia da semana não especificado')
+      fail('Dia da semana não especificado')
+      if (mode === 'submit') return
       return
     }
 
-    // Filtrar itens vazios ou inválidos antes de validar
-    // Garantir que quantidade seja um número inteiro
     const itensValidos = data.itens
       .map((item) => ({
         ...item,
-        quantidade: Math.floor(Number(item.quantidade)) || 1, // Garantir número inteiro
+        quantidade: Math.floor(Number(item.quantidade)) || 1,
       }))
       .filter(
-      (item) =>
-        item.nome_empresa &&
-        item.nome_empresa.trim() !== '' &&
-        item.produto_id > 0 &&
-        item.quantidade > 0
-    )
+        (item) =>
+          item.nome_empresa &&
+          item.nome_empresa.trim() !== '' &&
+          item.produto_id > 0 &&
+          item.quantidade > 0
+      )
     const itensOrdenados = [...itensValidos].sort((a, b) =>
       a.nome_empresa.trim().localeCompare(b.nome_empresa.trim(), 'pt-BR', { sensitivity: 'base' })
     )
 
     if (itensValidos.length === 0) {
-      toast.error('Adicione pelo menos um item válido (com empresa, pão e quantidade)')
+      fail('Adicione pelo menos um item válido (com empresa, pão e quantidade)')
+      if (mode === 'submit') return
       return
     }
 
-    // Validar apenas os itens válidos
     if (itensValidos.some((item) => !item.nome_empresa || item.nome_empresa.trim() === '')) {
-      toast.error('Preencha o nome da empresa em todos os itens')
+      fail('Preencha o nome da empresa em todos os itens')
+      if (mode === 'submit') return
       return
     }
 
     if (itensValidos.some((item) => item.produto_id === 0)) {
-      toast.error('Selecione todos os pães')
+      fail('Selecione todos os pães')
+      if (mode === 'submit') return
       return
     }
 
     if (itensValidos.some((item) => item.quantidade <= 0)) {
-      toast.error('Quantidade deve ser maior que zero')
+      fail('Quantidade deve ser maior que zero')
+      if (mode === 'submit') return
       return
     }
 
     try {
       setLoading(true)
-      
-      // Salvar empresas usadas (apenas dos itens válidos)
+
       for (const item of itensOrdenados) {
         if (item.nome_empresa && item.nome_empresa.trim()) {
           await salvarEmpresa(item.nome_empresa)
         }
       }
 
-      // Criar itens do roteiro com a empresa na observação (apenas itens válidos)
       const novosItens: RoteiroItem[] = itensOrdenados.map((item) => ({
         produto_id: item.produto_id,
         quantidade: item.quantidade,
-        observacao: item.nome_empresa.trim(), // Armazenar empresa na observação do item
+        observacao: item.nome_empresa.trim(),
       }))
 
-      // Formatar data para criação/verificação (usar a data do parâmetro ou hoje)
       let dataParaCriar = dataParam || format(new Date(), 'yyyy-MM-dd')
       if (dataParaCriar.includes('T')) {
         dataParaCriar = dataParaCriar.split('T')[0]
       } else if (dataParaCriar.includes(' ')) {
         dataParaCriar = dataParaCriar.split(' ')[0]
       }
-      
+
       const roteiros = await roteiroApi.listar({})
       const roteirosFiltrados = roteiros.filter((r) => {
         if (r.nome_empresa !== diaParam || r.motorista) return false
@@ -307,7 +315,7 @@ function NovoRoteiroContent() {
 
       const roteirosDoDia = ordenarRoteirosPorSlot(roteirosFiltrados)
       const roteiroNoSlot = roteirosDoDia[slotIndex]
-      
+
       if (roteiroNoSlot) {
         const roteiroCompleto = await roteiroApi.buscar(roteiroNoSlot.id)
         const itensExistentes = (roteiroCompleto.itens || []).map((item) => ({
@@ -316,13 +324,20 @@ function NovoRoteiroContent() {
           observacao: item.observacao || undefined,
         }))
 
-        // Juntar itens antigos + novos e ordenar por empresa (observacao) antes de salvar
         const todosItens = [...itensExistentes, ...novosItens].sort((a, b) =>
           (a.observacao || '').trim().localeCompare((b.observacao || '').trim(), 'pt-BR', { sensitivity: 'base' })
         )
 
         await roteiroApi.atualizarItens(roteiroNoSlot.id, todosItens)
-        toast.success(`${novosItens.length} pedido(s) adicionado(s) ao Roteiro ${slotIndex + 1}!`)
+        if (mode === 'submit') {
+          toast.success(`${novosItens.length} pedido(s) adicionado(s) ao Roteiro ${slotIndex + 1}!`)
+          router.push('/roteiros', { scroll: false })
+        } else {
+          await carregarRoteiroExistente()
+          toast.success('Alterações salvas automaticamente', { duration: 2000 })
+          // Limpa o formulário: os itens já foram persistidos; manter as linhas duplicaria no próximo merge.
+          reset({ itens: [{ nome_empresa: '', produto_id: 0, quantidade: 1 }] })
+        }
       } else {
         await roteiroApi.criar({
           nome_empresa: diaParam,
@@ -332,17 +347,48 @@ function NovoRoteiroContent() {
           status: 'pendente' as const,
           itens: novosItens,
         })
-        toast.success(`Roteiro ${slotIndex + 1} criado com ${novosItens.length} pedido(s)!`)
+        if (mode === 'submit') {
+          toast.success(`Roteiro ${slotIndex + 1} criado com ${novosItens.length} pedido(s)!`)
+          router.push('/roteiros', { scroll: false })
+        } else {
+          await carregarRoteiroExistente()
+          toast.success('Alterações salvas automaticamente', { duration: 2000 })
+          reset({ itens: [{ nome_empresa: '', produto_id: 0, quantidade: 1 }] })
+        }
       }
-      
-      router.push('/roteiros', { scroll: false })
     } catch (error: any) {
       toast.error('Erro ao salvar roteiro')
       console.error(error)
+      throw error
     } finally {
       setLoading(false)
     }
   }
+
+  const onSubmit = handleSubmit(async (data) => {
+    await persistNovoRoteiro(data, 'submit')
+  })
+
+  const saveBeforeNavigate = async () => {
+    await new Promise<void>((resolve, reject) => {
+      handleSubmit(
+        async (data) => {
+          try {
+            await persistNovoRoteiro(data, 'auto')
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        },
+        () => {
+          toast.error('Corrija os erros do formulário antes de mudar de página.')
+          reject(new Error('VALIDATION'))
+        }
+      )()
+    })
+  }
+
+  useRegisterNavigationSave(saveBeforeNavigate, () => isDirty)
 
   if (!diaParam || !DIAS_SEMANA.includes(diaParam)) {
     return null
@@ -424,7 +470,7 @@ function NovoRoteiroContent() {
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Coluna Esquerda: Formulário */}
         <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <form onSubmit={onSubmit} className="space-y-3">
         <div className="bg-white rounded-lg shadow-lg p-4">
           <h2 className="text-lg font-bold text-gray-900 mb-3">
             Adicionar Pães

@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar'
 import PageTransition from '@/components/PageTransition'
 import { AuthProvider } from '@/components/AuthProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { NavigationSaveProvider } from '@/components/NavigationSaveProvider'
 
 // Usa fontes do sistema para evitar falha no build Docker (sem acesso a Google Fonts)
 
@@ -35,12 +36,14 @@ export default function RootLayout({
       <body className="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
         <ThemeProvider>
           <AuthProvider>
-            <Navbar />
-            <main className="min-h-screen py-8">
-              <PageTransition>
-                {children}
-              </PageTransition>
-            </main>
+            <NavigationSaveProvider>
+              <Navbar />
+              <main className="min-h-screen py-8">
+                <PageTransition>
+                  {children}
+                </PageTransition>
+              </main>
+            </NavigationSaveProvider>
             <Toaster position="top-right" />
           </AuthProvider>
         </ThemeProvider>

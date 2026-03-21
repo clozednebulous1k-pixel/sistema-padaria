@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRegisterNavigationSave } from '@/components/NavigationSaveProvider'
 import { useRouter, useParams } from 'next/navigation'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { roteiroApi, produtoApi, empresaApi, Produto, Roteiro, RoteiroItem } from '@/lib/api'
@@ -41,9 +42,11 @@ export default function EditarRoteiroPage() {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
     setValue,
     watch,
+    reset,
+    getValues,
   } = useForm<FormData>({
     defaultValues: {
       data_producao: '',
@@ -221,24 +224,33 @@ export default function EditarRoteiroPage() {
     }
   }
 
-  const onSubmit = async (data: FormData) => {
+  const persistRoteiro = async (data: FormData, mode: 'submit' | 'auto') => {
+    const fail = (message: string) => {
+      toast.error(message)
+      if (mode === 'auto') throw new Error('VALIDATION')
+    }
+
     if (data.itens.length === 0) {
-      toast.error('Adicione pelo menos um item')
+      fail('Adicione pelo menos um item')
+      if (mode === 'submit') return
       return
     }
 
     if (data.itens.some((item) => !item.nome_empresa || item.nome_empresa.trim() === '')) {
-      toast.error('Preencha o nome da empresa em todos os itens')
+      fail('Preencha o nome da empresa em todos os itens')
+      if (mode === 'submit') return
       return
     }
 
     if (data.itens.some((item) => item.produto_id === 0)) {
-      toast.error('Selecione todos os pães')
+      fail('Selecione todos os pães')
+      if (mode === 'submit') return
       return
     }
 
     if (data.itens.some((item) => item.quantidade <= 0)) {
-      toast.error('Quantidade deve ser maior que zero')
+      fail('Quantidade deve ser maior que zero')
+      if (mode === 'submit') return
       return
     }
 
@@ -255,7 +267,7 @@ export default function EditarRoteiroPage() {
 
     try {
       setLoading(true)
-      
+
       // Salvar empresas usadas (apenas dos itens válidos)
       for (const item of itensOrdenados) {
         if (item.nome_empresa && item.nome_empresa.trim()) {
@@ -266,47 +278,73 @@ export default function EditarRoteiroPage() {
       // Atualizar dados gerais do roteiro - garantir formato YYYY-MM-DD
       let dataFormatada = data.data_producao
       if (dataFormatada) {
-        // Se a data vier com hora ou outro formato, formatar para YYYY-MM-DD
         if (dataFormatada.includes('T')) {
           dataFormatada = dataFormatada.split('T')[0]
         } else if (dataFormatada.includes(' ')) {
           dataFormatada = dataFormatada.split(' ')[0]
         }
-        // Garantir formato YYYY-MM-DD usando date-fns
         try {
           const date = parseISO(dataFormatada)
           dataFormatada = format(date, 'yyyy-MM-dd')
         } catch (e) {
-          // Se falhar, usar como está (já deve estar no formato correto)
           console.log('Data já está no formato correto:', dataFormatada)
         }
       }
-      
+
       await roteiroApi.atualizar(id, {
         data_producao: dataFormatada,
         periodo: data.periodo || undefined,
       })
 
-      // Preparar itens para atualização (apenas itens válidos) - IMPORTANTE: salvar empresa na observacao
       const itensParaAtualizar: RoteiroItem[] = itensOrdenados.map((item) => ({
         produto_id: item.produto_id,
         quantidade: item.quantidade,
-        observacao: item.nome_empresa.trim(), // Salvar empresa na observacao do item
+        observacao: item.nome_empresa.trim(),
       }))
-      
-      // Atualizar os itens do roteiro com a empresa correta na observacao
+
       await roteiroApi.atualizarItens(id, itensParaAtualizar)
 
-      toast.success('Roteiro atualizado com sucesso!')
-      router.push('/roteiros', { scroll: false })
+      if (mode === 'submit') {
+        toast.success('Roteiro atualizado com sucesso!')
+        router.push('/roteiros', { scroll: false })
+      } else {
+        toast.success('Alterações salvas automaticamente', { duration: 2000 })
+        reset(getValues())
+      }
     } catch (error: any) {
       const mensagemErro = error?.response?.data?.message || error?.message || 'Erro ao atualizar roteiro'
       toast.error(mensagemErro)
       console.error('Erro ao atualizar roteiro:', error)
+      throw error
     } finally {
       setLoading(false)
     }
   }
+
+  const onSubmit = handleSubmit(async (data) => {
+    await persistRoteiro(data, 'submit')
+  })
+
+  const saveBeforeNavigate = async () => {
+    await new Promise<void>((resolve, reject) => {
+      handleSubmit(
+        async (data) => {
+          try {
+            await persistRoteiro(data, 'auto')
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        },
+        () => {
+          toast.error('Corrija os erros do formulário antes de mudar de página.')
+          reject(new Error('VALIDATION'))
+        }
+      )()
+    })
+  }
+
+  useRegisterNavigationSave(saveBeforeNavigate, () => isDirty)
 
   if (carregando) {
     return (
@@ -463,7 +501,7 @@ export default function EditarRoteiroPage() {
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Coluna Esquerda: Formulário */}
         <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <form onSubmit={onSubmit} className="space-y-3">
         <div className="bg-white rounded-lg shadow p-4">
           <h2 className="text-lg font-bold text-gray-900 mb-3">
             Informações do Roteiro

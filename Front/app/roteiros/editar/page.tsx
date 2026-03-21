@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useState, useEffect } from 'react'
+import { useRegisterNavigationSave } from '@/components/NavigationSaveProvider'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { roteiroApi, produtoApi, empresaApi, Produto, Roteiro, RoteiroItem } from '@/lib/api'
@@ -45,10 +46,11 @@ function EditarRoteirosPorDataContent() {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
     reset,
     watch,
     setValue,
+    getValues,
   } = useForm<FormData>()
 
   const { fields, append, remove } = useFieldArray({
@@ -254,13 +256,18 @@ function EditarRoteirosPorDataContent() {
     }
   }
 
-  const onSubmit = async (data: FormData) => {
+  const persistRoteiroPorData = async (data: FormData, mode: 'submit' | 'auto') => {
+    const fail = (message: string) => {
+      toast.error(message)
+      if (mode === 'auto') throw new Error('VALIDATION')
+    }
+
     if (!diaParam || !roteiroExistente) {
-      toast.error('Dia da semana ou roteiro não encontrado')
+      fail('Dia da semana ou roteiro não encontrado')
+      if (mode === 'submit') return
       return
     }
 
-    // Filtrar itens vazios ou inválidos antes de validar
     const itensValidos = data.itens.filter(
       (item) =>
         item.nome_empresa &&
@@ -270,62 +277,59 @@ function EditarRoteirosPorDataContent() {
     )
 
     if (itensValidos.length === 0) {
-      toast.error('Adicione pelo menos um item válido (com empresa, pão e quantidade)')
+      fail('Adicione pelo menos um item válido (com empresa, pão e quantidade)')
+      if (mode === 'submit') return
       return
     }
 
-    // Validar apenas os itens válidos
     if (itensValidos.some((item) => !item.nome_empresa || item.nome_empresa.trim() === '')) {
-      toast.error('Preencha o nome da empresa em todos os itens')
+      fail('Preencha o nome da empresa em todos os itens')
+      if (mode === 'submit') return
       return
     }
 
     if (itensValidos.some((item) => item.produto_id === 0)) {
-      toast.error('Selecione todos os pães')
+      fail('Selecione todos os pães')
+      if (mode === 'submit') return
       return
     }
 
     if (itensValidos.some((item) => item.quantidade <= 0)) {
-      toast.error('Quantidade deve ser maior que zero')
+      fail('Quantidade deve ser maior que zero')
+      if (mode === 'submit') return
       return
     }
 
     try {
       setLoading(true)
-      
-      // Salvar empresas usadas (apenas dos itens válidos)
+
       for (const item of itensValidos) {
         if (item.nome_empresa && item.nome_empresa.trim()) {
           await salvarEmpresa(item.nome_empresa)
         }
       }
 
-      // Criar itens do roteiro com a empresa na observação (apenas itens válidos)
       const itensRoteiro: RoteiroItem[] = itensValidos.map((item) => ({
         produto_id: item.produto_id,
         quantidade: item.quantidade,
-        observacao: item.nome_empresa.trim(), // Armazenar empresa na observação do item
+        observacao: item.nome_empresa.trim(),
       }))
 
-      // Atualizar o período do roteiro - garantir formato YYYY-MM-DD
       let dataFormatada = roteiroExistente.data_producao
       if (dataFormatada) {
-        // Se a data vier com hora ou outro formato, formatar para YYYY-MM-DD
         if (dataFormatada.includes('T')) {
           dataFormatada = dataFormatada.split('T')[0]
         } else if (dataFormatada.includes(' ')) {
           dataFormatada = dataFormatada.split(' ')[0]
         }
-        // Garantir formato YYYY-MM-DD usando date-fns
         try {
           const date = parseISO(dataFormatada)
           dataFormatada = format(date, 'yyyy-MM-dd')
         } catch (e) {
-          // Se falhar, usar como está (já deve estar no formato correto)
           console.log('Data já está no formato correto:', dataFormatada)
         }
       }
-      
+
       await roteiroApi.atualizar(roteiroExistente.id, {
         nome_empresa: roteiroExistente.nome_empresa,
         data_producao: dataFormatada,
@@ -333,19 +337,49 @@ function EditarRoteirosPorDataContent() {
         status: roteiroExistente.status,
       })
 
-      // Atualizar os itens do roteiro (com a empresa na observacao)
       await roteiroApi.atualizarItens(roteiroExistente.id, itensRoteiro)
-      
-      toast.success('Roteiro atualizado com sucesso!')
-      router.push('/roteiros', { scroll: false })
+
+      if (mode === 'submit') {
+        toast.success('Roteiro atualizado com sucesso!')
+        router.push('/roteiros', { scroll: false })
+      } else {
+        toast.success('Alterações salvas automaticamente', { duration: 2000 })
+        reset(getValues())
+      }
     } catch (error: any) {
       const mensagemErro = error?.response?.data?.message || error?.message || 'Erro ao atualizar roteiro'
       toast.error(mensagemErro)
       console.error('Erro ao atualizar roteiro:', error)
+      throw error
     } finally {
       setLoading(false)
     }
   }
+
+  const onSubmit = handleSubmit(async (data) => {
+    await persistRoteiroPorData(data, 'submit')
+  })
+
+  const saveBeforeNavigate = async () => {
+    await new Promise<void>((resolve, reject) => {
+      handleSubmit(
+        async (data) => {
+          try {
+            await persistRoteiroPorData(data, 'auto')
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        },
+        () => {
+          toast.error('Corrija os erros do formulário antes de mudar de página.')
+          reject(new Error('VALIDATION'))
+        }
+      )()
+    })
+  }
+
+  useRegisterNavigationSave(saveBeforeNavigate, () => isDirty)
 
   if (!diaParam || !DIAS_SEMANA.includes(diaParam)) {
     return null
@@ -371,7 +405,7 @@ function EditarRoteirosPorDataContent() {
 
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Coluna Esquerda: Formulário de Edição */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <form onSubmit={onSubmit} className="space-y-3">
           <div className="bg-white rounded-lg shadow p-4">
             <h2 className="text-lg font-bold text-gray-900 mb-3">
               Editar Pedidos
