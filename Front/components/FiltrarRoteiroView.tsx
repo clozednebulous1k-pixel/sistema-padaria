@@ -27,6 +27,28 @@ function normalizarParaBusca(s: string): string {
     .trim()
 }
 
+/** Chave única para comparar tipo de massa (Vercel/Postgres pode vir com caixa diferente do localhost). */
+function chaveTipoMassa(s: string | null | undefined): string {
+  return normalizarParaBusca(s || '')
+}
+
+function isMassaDoceTipo(s: string | null | undefined): boolean {
+  return chaveTipoMassa(s) === 'massa doce'
+}
+
+function isMassaSalgadaTipo(s: string | null | undefined): boolean {
+  return chaveTipoMassa(s) === 'massa salgada'
+}
+
+function pedidoCaiEmAlgumaMassaSelecionada(
+  tipoPedido: string | null | undefined,
+  massasSelecionadas: Set<string>
+): boolean {
+  if (!tipoPedido?.trim()) return false
+  const k = chaveTipoMassa(tipoPedido)
+  return [...massasSelecionadas].some((m) => chaveTipoMassa(m) === k)
+}
+
 function getDiaSemanaFromDate(date: Date): string {
   const day = date.getDay()
   return DIAS_SEMANA[day === 0 ? 6 : day - 1]
@@ -226,9 +248,9 @@ export default function FiltrarRoteiroView() {
   }, [pedidosDoDia])
 
   const temMassaDoce =
-    massasSelecionadas.has('Massa Doce') || mostrarRoteiroMassaDoceCliente
+    [...massasSelecionadas].some((m) => isMassaDoceTipo(m)) || mostrarRoteiroMassaDoceCliente
   const temMassaSalgada =
-    massasSelecionadas.has('Massa Salgada') || mostrarRoteiroMassaSalgadaCliente
+    [...massasSelecionadas].some((m) => isMassaSalgadaTipo(m)) || mostrarRoteiroMassaSalgadaCliente
   const mostrarFiltroRecheio = temMassaDoce || temMassaSalgada
 
   /** Recheios só dos pedidos de Massa Doce / Massa Salgada conforme o que está ativo */
@@ -237,10 +259,10 @@ export default function FiltrarRoteiroView() {
     const set = new Set<string>()
     pedidosDoDia.forEach((p) => {
       const tm = p.tipo_massa
-      if (!tm) return
-      if (tm === 'Massa Doce' && !temMassaDoce) return
-      if (tm === 'Massa Salgada' && !temMassaSalgada) return
-      if (tm !== 'Massa Doce' && tm !== 'Massa Salgada') return
+      if (!tm?.trim()) return
+      if (isMassaDoceTipo(tm) && !temMassaDoce) return
+      if (isMassaSalgadaTipo(tm) && !temMassaSalgada) return
+      if (!isMassaDoceTipo(tm) && !isMassaSalgadaTipo(tm)) return
       const r = (p.recheio || '').trim()
       if (r) set.add(r)
     })
@@ -304,7 +326,8 @@ export default function FiltrarRoteiroView() {
       return []
     const itensFiltradosParaEmpresas = pedidosDoDia.filter((p) => {
       const paoOk = paesSelecionados.size === 0 || paesSelecionados.has(p.produto_nome)
-      const massaOk = massasSelecionadas.size === 0 || (p.tipo_massa && massasSelecionadas.has(p.tipo_massa))
+      const massaOk =
+        massasSelecionadas.size === 0 || pedidoCaiEmAlgumaMassaSelecionada(p.tipo_massa, massasSelecionadas)
       const rCheio = (p.recheio || '').trim()
       const recheioOk =
         recheiosSelecionados.size === 0 || (rCheio !== '' && recheiosSelecionados.has(rCheio))
@@ -478,7 +501,8 @@ export default function FiltrarRoteiroView() {
   const itensFiltrados = useMemo(() => {
     const filtrados = pedidosDoDia.filter((p) => {
       const paoOk = paesSelecionados.size === 0 || paesSelecionados.has(p.produto_nome)
-      const massaOk = massasSelecionadas.size === 0 || (p.tipo_massa && massasSelecionadas.has(p.tipo_massa))
+      const massaOk =
+        massasSelecionadas.size === 0 || pedidoCaiEmAlgumaMassaSelecionada(p.tipo_massa, massasSelecionadas)
       const rCheio = (p.recheio || '').trim()
       const recheioOk =
         recheiosSelecionados.size === 0 || (rCheio !== '' && recheiosSelecionados.has(rCheio))
@@ -521,7 +545,9 @@ export default function FiltrarRoteiroView() {
     return Array.from(massasSelecionadas)
       .sort()
       .map((massa) => {
-        const itensMassa = itensFiltrados.filter((p) => p.tipo_massa === massa)
+        const itensMassa = itensFiltrados.filter(
+          (p) => p.tipo_massa && chaveTipoMassa(p.tipo_massa) === chaveTipoMassa(massa)
+        )
         const total = itensMassa.reduce((s, p) => s + p.quantidade, 0)
         const paesMap = new Map<string, number>()
         itensMassa.forEach((p) => {
@@ -537,13 +563,13 @@ export default function FiltrarRoteiroView() {
 
   // Roteiro "Massa Doce Cliente": todos os pedidos de Massa Doce do dia (independente do filtro de massa)
   const roteiroMassaDoceClienteItens = useMemo(() => {
-    return pedidosDoDia.filter((p) => p.tipo_massa === 'Massa Doce')
+    return pedidosDoDia.filter((p) => isMassaDoceTipo(p.tipo_massa))
   }, [pedidosDoDia])
   const totalRoteiroMassaDoceCliente = roteiroMassaDoceClienteItens.reduce((s, p) => s + p.quantidade, 0)
 
   // Roteiro "Massa Salgada Cliente": todos os pedidos de Massa Salgada do dia (independente do filtro de massa)
   const roteiroMassaSalgadaClienteItens = useMemo(() => {
-    return pedidosDoDia.filter((p) => p.tipo_massa === 'Massa Salgada')
+    return pedidosDoDia.filter((p) => isMassaSalgadaTipo(p.tipo_massa))
   }, [pedidosDoDia])
   const totalRoteiroMassaSalgadaCliente = roteiroMassaSalgadaClienteItens.reduce((s, p) => s + p.quantidade, 0)
 
