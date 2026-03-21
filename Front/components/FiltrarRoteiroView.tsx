@@ -71,6 +71,8 @@ export default function FiltrarRoteiroView() {
   const [buscaPao, setBuscaPao] = useState('')
   const [massasSelecionadas, setMassasSelecionadas] = useState<Set<string>>(new Set())
   const [buscaMassa, setBuscaMassa] = useState('')
+  const [recheiosSelecionados, setRecheiosSelecionados] = useState<Set<string>>(new Set())
+  const [buscaRecheio, setBuscaRecheio] = useState('')
   const [opcoesRelatorioSelecionadas, setOpcoesRelatorioSelecionadas] = useState<Set<string>>(new Set())
   const [opcoesRelatorioTodas, setOpcoesRelatorioTodas] = useState<string[]>([])
   const [buscaEmpresa, setBuscaEmpresa] = useState('')
@@ -128,9 +130,11 @@ export default function FiltrarRoteiroView() {
       setEmpresasSelecionadas(new Set())
       setTodasEmpresasDesmarcadas(false)
       setMassasSelecionadas(new Set())
+      setRecheiosSelecionados(new Set())
       setOpcoesRelatorioSelecionadas(new Set())
       setBuscaPao('')
       setBuscaMassa('')
+      setBuscaRecheio('')
     } catch (e) {
       console.error(e)
       toast.error('Erro ao carregar pedidos do dia')
@@ -205,6 +209,21 @@ export default function FiltrarRoteiroView() {
     return Array.from(set).sort()
   }, [pedidosDoDia])
 
+  const recheiosUnicos = useMemo(() => {
+    const set = new Set<string>()
+    pedidosDoDia.forEach((p) => {
+      const r = (p.recheio || '').trim()
+      if (r) set.add(r)
+    })
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
+  }, [pedidosDoDia])
+
+  const recheiosFiltrados = useMemo(() => {
+    const termo = normalizarParaBusca(buscaRecheio)
+    if (!termo) return recheiosUnicos
+    return recheiosUnicos.filter((r) => normalizarParaBusca(r).includes(termo))
+  }, [recheiosUnicos, buscaRecheio])
+
   const quantidadePorMassa = useMemo(() => {
     const map = new Map<string, number>()
     pedidosDoDia.forEach((p) => {
@@ -222,16 +241,25 @@ export default function FiltrarRoteiroView() {
   }, [massasUnicas, buscaMassa])
 
   const empresasPorPao = useMemo(() => {
-    if (paesSelecionados.size === 0 && massasSelecionadas.size === 0 && opcoesRelatorioSelecionadas.size === 0) return []
+    if (
+      paesSelecionados.size === 0 &&
+      massasSelecionadas.size === 0 &&
+      recheiosSelecionados.size === 0 &&
+      opcoesRelatorioSelecionadas.size === 0
+    )
+      return []
     const itensFiltradosParaEmpresas = pedidosDoDia.filter((p) => {
       const paoOk = paesSelecionados.size === 0 || paesSelecionados.has(p.produto_nome)
       const massaOk = massasSelecionadas.size === 0 || (p.tipo_massa && massasSelecionadas.has(p.tipo_massa))
+      const rCheio = (p.recheio || '').trim()
+      const recheioOk =
+        recheiosSelecionados.size === 0 || (rCheio !== '' && recheiosSelecionados.has(rCheio))
       const opcaoOk = opcoesRelatorioSelecionadas.size === 0 || (p.opcao_relatorio && opcoesRelatorioSelecionadas.has((p.opcao_relatorio || '').trim().toLowerCase()))
-      return paoOk && massaOk && opcaoOk
+      return paoOk && massaOk && recheioOk && opcaoOk
     })
     const set = new Set(itensFiltradosParaEmpresas.map((p) => p.empresa))
     return Array.from(set).sort()
-  }, [pedidosDoDia, paesSelecionados, massasSelecionadas, opcoesRelatorioSelecionadas])
+  }, [pedidosDoDia, paesSelecionados, massasSelecionadas, recheiosSelecionados, opcoesRelatorioSelecionadas])
 
   const empresasFiltradas = useMemo(() => {
     const termo = normalizarParaBusca(buscaEmpresa)
@@ -259,6 +287,27 @@ export default function FiltrarRoteiroView() {
     })
     setEmpresasSelecionadas(new Set())
     setTodasEmpresasDesmarcadas(false)
+  }
+
+  const toggleRecheio = (recheio: string) => {
+    setRecheiosSelecionados((prev) => {
+      const next = new Set(prev)
+      if (next.has(recheio)) next.delete(recheio)
+      else next.add(recheio)
+      return next
+    })
+    setEmpresasSelecionadas(new Set())
+    setTodasEmpresasDesmarcadas(false)
+  }
+
+  const selecionarTodasRecheios = () => {
+    if (recheiosSelecionados.size === recheiosUnicos.length) {
+      setRecheiosSelecionados(new Set())
+      setEmpresasSelecionadas(new Set())
+      setTodasEmpresasDesmarcadas(false)
+    } else {
+      setRecheiosSelecionados(new Set(recheiosUnicos))
+    }
   }
 
   const selecionarTodasMassas = () => {
@@ -374,9 +423,12 @@ export default function FiltrarRoteiroView() {
     const filtrados = pedidosDoDia.filter((p) => {
       const paoOk = paesSelecionados.size === 0 || paesSelecionados.has(p.produto_nome)
       const massaOk = massasSelecionadas.size === 0 || (p.tipo_massa && massasSelecionadas.has(p.tipo_massa))
+      const rCheio = (p.recheio || '').trim()
+      const recheioOk =
+        recheiosSelecionados.size === 0 || (rCheio !== '' && recheiosSelecionados.has(rCheio))
       const opcaoOk = opcoesRelatorioSelecionadas.size === 0 || (p.opcao_relatorio && opcoesRelatorioSelecionadas.has((p.opcao_relatorio || '').trim().toLowerCase()))
       const empresaOk = (!todasEmpresasDesmarcadas && empresasSelecionadas.size === 0) || empresasSelecionadas.has(p.empresa)
-      return paoOk && massaOk && opcaoOk && empresaOk
+      return paoOk && massaOk && recheioOk && opcaoOk && empresaOk
     })
 
     // Ordenar por empresa e, dentro da empresa, por nome do pão (incluindo recheio/opção)
@@ -387,7 +439,15 @@ export default function FiltrarRoteiroView() {
       const nomeB = `${b.produto_nome || ''}${b.recheio ? ` ${b.recheio}` : ''}${b.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(b.opcao_relatorio)}` : ''}`
       return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' })
     })
-  }, [pedidosDoDia, paesSelecionados, massasSelecionadas, opcoesRelatorioSelecionadas, empresasSelecionadas, todasEmpresasDesmarcadas])
+  }, [
+    pedidosDoDia,
+    paesSelecionados,
+    massasSelecionadas,
+    recheiosSelecionados,
+    opcoesRelatorioSelecionadas,
+    empresasSelecionadas,
+    todasEmpresasDesmarcadas
+  ])
 
   const totalUnidades = itensFiltrados.reduce((s, p) => s + p.quantidade, 0)
 
@@ -432,7 +492,8 @@ export default function FiltrarRoteiroView() {
   const totalRoteiroMassaSalgadaCliente = roteiroMassaSalgadaClienteItens.reduce((s, p) => s + p.quantidade, 0)
 
   const abrirRoteiroParaImpressao = () => {
-    const soRoteiroMassa = massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0
+    const soRoteiroMassa =
+      massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0 && recheiosSelecionados.size === 0
     const temItens = soRoteiroMassa ? roteiroPorMassa.some((r) => r.quantidade > 0) : itensFiltrados.length > 0
     if (!temItens) {
       toast.error(soRoteiroMassa ? 'Selecione ao menos um tipo de massa para imprimir.' : 'Selecione filtros e itens para imprimir.')
@@ -1137,6 +1198,57 @@ export default function FiltrarRoteiroView() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                Filtrar por recheio
+              </h2>
+              {recheiosUnicos.length > 0 && (
+                <button
+                  type="button"
+                  onClick={selecionarTodasRecheios}
+                  className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  {recheiosSelecionados.size === recheiosUnicos.length ? 'Desmarcar todos' : 'Marcar todos'}
+                </button>
+              )}
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Marque os recheios para restringir o roteiro (ex.: margarina no recheio ou na opção de relatório). Com algum recheio marcado, só entram linhas que tenham esse recheio cadastrado no produto.
+            </p>
+            <input
+              type="text"
+              placeholder="Pesquisar recheio..."
+              value={buscaRecheio}
+              onChange={(e) => setBuscaRecheio(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm mb-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <div className="flex flex-wrap gap-3">
+              {recheiosFiltrados.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400 py-1">
+                  {buscaRecheio.trim()
+                    ? 'Nenhum recheio encontrado.'
+                    : 'Nenhum recheio distinto no dia (cadastre recheio nos produtos).'}
+                </p>
+              ) : (
+                recheiosFiltrados.map((recheio) => (
+                  <label
+                    key={recheio}
+                    className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={recheiosSelecionados.has(recheio)}
+                      onChange={() => toggleRecheio(recheio)}
+                      className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{recheio}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 Filtrar por opção de relatório
               </h2>
               {opcoesRelatorioDisponiveis.length > 0 && (
@@ -1178,7 +1290,11 @@ export default function FiltrarRoteiroView() {
             </div>
           </div>
 
-          {(paesSelecionados.size > 0 || massasSelecionadas.size > 0 || opcoesRelatorioSelecionadas.size > 0) && empresasPorPao.length > 0 && (
+          {(paesSelecionados.size > 0 ||
+            massasSelecionadas.size > 0 ||
+            recheiosSelecionados.size > 0 ||
+            opcoesRelatorioSelecionadas.size > 0) &&
+            empresasPorPao.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
@@ -1229,9 +1345,15 @@ export default function FiltrarRoteiroView() {
             </div>
           )}
 
-          {(paesSelecionados.size > 0 || massasSelecionadas.size > 0 || opcoesRelatorioSelecionadas.size > 0) ? (
+          {(paesSelecionados.size > 0 ||
+            massasSelecionadas.size > 0 ||
+            recheiosSelecionados.size > 0 ||
+            opcoesRelatorioSelecionadas.size > 0) ? (
           (() => {
-            const soRoteiroPorMassa = massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0
+            const soRoteiroPorMassa =
+              massasSelecionadas.size > 0 &&
+              opcoesRelatorioSelecionadas.size === 0 &&
+              recheiosSelecionados.size === 0
             return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border border-gray-200 dark:border-gray-700">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -1249,7 +1371,9 @@ export default function FiltrarRoteiroView() {
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
                     {opcoesRelatorioSelecionadas.size > 0
                       ? 'Roteiro detalhado por empresa e pão (opção: Margarina / Sem Margarina / Embalado).'
-                      : 'Selecione um ou mais tipos de massa acima para ver o roteiro (massa + quantidade).'}
+                      : recheiosSelecionados.size > 0
+                        ? 'Roteiro com os filtros ativos (incluindo recheios selecionados).'
+                        : 'Selecione um ou mais tipos de massa acima para ver o roteiro (massa + quantidade).'}
                   </p>
                 )}
               </div>
@@ -1320,9 +1444,12 @@ export default function FiltrarRoteiroView() {
               )
             ) : itensFiltrados.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400 text-sm py-4">
-                {paesUnicos.length === 0 && massasUnicas.length === 0 && opcoesRelatorioDisponiveis.length === 0
+                {paesUnicos.length === 0 &&
+                massasUnicas.length === 0 &&
+                recheiosUnicos.length === 0 &&
+                opcoesRelatorioDisponiveis.length === 0
                   ? 'Nenhum pedido no dia.'
-                  : 'Selecione ao menos um pão, um tipo de massa ou uma opção (Margarina, Sem Margarina, Embalado) para ver o roteiro.'}
+                  : 'Selecione ao menos um pão, um tipo de massa, um recheio ou uma opção de relatório (Margarina, Sem Margarina, Embalado) para ver o roteiro.'}
               </p>
             ) : (
               <>
@@ -1360,7 +1487,7 @@ export default function FiltrarRoteiroView() {
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 text-center">
               <p className="text-gray-600 dark:text-gray-400">
-                Selecione ao menos um pão, um tipo de massa ou uma opção (Margarina, Sem Margarina, Embalado) para ver o roteiro.
+                Selecione ao menos um pão, um tipo de massa, um recheio ou uma opção de relatório (Margarina, Sem Margarina, Embalado) para ver o roteiro.
               </p>
             </div>
           )}
