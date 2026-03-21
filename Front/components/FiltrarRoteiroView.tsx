@@ -29,15 +29,26 @@ function normalizarParaBusca(s: string): string {
 
 /** Chave única para comparar tipo de massa (Vercel/Postgres pode vir com caixa diferente do localhost). */
 function chaveTipoMassa(s: string | null | undefined): string {
-  return normalizarParaBusca(s || '')
+  return normalizarParaBusca(s || '').replace(/\s+/g, ' ')
 }
 
+/**
+ * Considera Massa Doce também variações cadastradas (ex.: "Massa Doce com margarina"),
+ * comuns em produção e diferentes do texto exato "Massa Doce".
+ */
 function isMassaDoceTipo(s: string | null | undefined): boolean {
-  return chaveTipoMassa(s) === 'massa doce'
+  const k = chaveTipoMassa(s)
+  if (!k) return false
+  return k === 'massa doce' || k.startsWith('massa doce ')
 }
 
+/**
+ * Idem para Massa Salgada e derivações (ex.: "Massa Salgada com margarina").
+ */
 function isMassaSalgadaTipo(s: string | null | undefined): boolean {
-  return chaveTipoMassa(s) === 'massa salgada'
+  const k = chaveTipoMassa(s)
+  if (!k) return false
+  return k === 'massa salgada' || k.startsWith('massa salgada ')
 }
 
 function pedidoCaiEmAlgumaMassaSelecionada(
