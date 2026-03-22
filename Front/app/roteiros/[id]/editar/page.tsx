@@ -421,17 +421,18 @@ export default function EditarRoteiroPage() {
         <meta charset="utf-8">
         <title>Impressão - Roteiro de Entregas</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; font-size: 15px; }
+          body { font-family: Arial, sans-serif; padding: 20px; font-size: 16px; }
           .card { padding: 16px; border: 1px solid #ddd; border-radius: 8px; background: #f9fafb; }
-          h3 { margin: 0 0 10px 0; font-size: 20px; border-bottom: 2px solid #550701; padding-bottom: 5px; }
-          .info { font-size: 14px; margin-bottom: 15px; }
-          table { width: 100%; border-collapse: collapse; font-size: 15px; margin-bottom: 15px; }
+          h3 { margin: 0 0 10px 0; font-size: 21px; border-bottom: 2px solid #550701; padding-bottom: 5px; }
+          .info { font-size: 15px; margin-bottom: 15px; }
+          .info p { margin: 0; }
+          table { width: 100%; border-collapse: collapse; font-size: 16px; margin-bottom: 15px; }
           th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
-          th { background: #550701; color: white; font-size: 14px; }
+          th { background: #550701; color: white; font-size: 15px; }
           td.qtd { text-align: center; font-weight: bold; }
           .total-por-tipo { margin-top: 15px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 4px; }
-          .total-por-tipo h4 { margin: 0 0 8px 0; font-size: 16px; color: #550701; }
-          .total-por-tipo ul { margin: 0; padding-left: 20px; font-size: 14px; }
+          .total-por-tipo h4 { margin: 0 0 8px 0; font-size: 17px; color: #550701; }
+          .total-por-tipo ul { margin: 0; padding-left: 20px; font-size: 15px; }
           .total-por-tipo li { margin: 4px 0; }
         </style>
       </head>
@@ -439,9 +440,7 @@ export default function EditarRoteiroPage() {
         <div class="card">
           <h3>Roteiro de Entregas</h3>
           <div class="info">
-            <p><strong>Dia:</strong> ${diaLabel}</p>
-            <p><strong>Data:</strong> ${dataProd}</p>
-            <p><strong>Período:</strong> ${periodoLabel}</p>
+            <p><strong>Dia:</strong> ${diaLabel} &nbsp;•&nbsp; <strong>Data:</strong> ${dataProd} &nbsp;•&nbsp; <strong>Período:</strong> ${periodoLabel}</p>
           </div>
           <table>
             <thead>

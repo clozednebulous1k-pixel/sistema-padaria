@@ -255,24 +255,22 @@ export default function LancamentosPage() {
   <meta charset="utf-8">
   <title>Lançamentos - ${dataFormatada} (${periodoTexto})</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
-    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
-    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 16px; }
+    h1 { font-size: 21px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 14px; }
+    .info p { margin: 0; }
     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 16px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; font-weight: bold; text-align:center; font-size: 17px; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; font-weight: bold; text-align:center; font-size: 18px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <h1>Lançamentos - ${dataFormatada} (${periodoTexto})</h1>
   <div class="info">
-    <p><strong>Data:</strong> ${dataFormatada}</p>
-    <p><strong>Período:</strong> ${periodoTexto}</p>
-    <p><strong>Empresas:</strong> ${empresasUnicas.join(', ')}</p>
-    <p><strong>Total de pães:</strong> ${totalGeral}</p>
+    <p><strong>Data:</strong> ${dataFormatada} &nbsp;•&nbsp; <strong>Período:</strong> ${periodoTexto} &nbsp;•&nbsp; <strong>Empresas:</strong> ${empresasUnicas.join(', ')} &nbsp;•&nbsp; <strong>Total de pães:</strong> ${totalGeral}</p>
   </div>
   <table>
     <thead>

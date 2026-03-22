@@ -121,6 +121,14 @@ export default function HistoricoRoteirosPage() {
     }
   }
 
+  const formatarDataImpressao = (data: string) => {
+    try {
+      return format(new Date(data), 'dd/MM/yyyy', { locale: ptBR })
+    } catch {
+      return data
+    }
+  }
+
   const toggleExpandir = (id: string) => {
     if (registroExpandido === id) {
       setRegistroExpandido(null)
@@ -268,10 +276,11 @@ export default function HistoricoRoteirosPage() {
                                 <head>
                                   <title>Roteiro de Entregas - ${registro.diaSemana} - ${formatarDataHora(registro.dataImpressao)}</title>
                                   <style>
-                                    body { font-family: Arial, sans-serif; padding: 14px; font-size: 15px; }
-                                    h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 20px; }
-                                    .info { margin: 8px 0; font-size: 13px; }
-                                    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+                                    body { font-family: Arial, sans-serif; padding: 14px; font-size: 16px; }
+                                    h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 21px; }
+                                    .info { margin: 8px 0; font-size: 14px; }
+                                    .info p { margin: 0; }
+                                    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 16px; }
                                     th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
                                     th { background-color: #550701; color: white; }
                                     td { text-align: left; }
@@ -281,8 +290,7 @@ export default function HistoricoRoteirosPage() {
                                 <body>
                                   <h1>Roteiro de Entregas - Histórico</h1>
                                   <div class="info">
-                                    <p><strong>Dia:</strong> ${registro.diaSemana}</p>
-                                    <p><strong>Impresso em:</strong> ${formatarDataHora(registro.dataImpressao)}</p>
+                                    <p><strong>Dia:</strong> ${registro.diaSemana} &nbsp;•&nbsp; <strong>Impresso em:</strong> ${formatarDataImpressao(registro.dataImpressao)}</p>
                                   </div>
                                   <table>
                                     <thead>
@@ -302,10 +310,10 @@ export default function HistoricoRoteirosPage() {
                                       `).join('')}
                                     </tbody>
                                   </table>
-                                  <h2 style="margin-top: 12px; color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; font-size: 17px;">
+                                  <h2 style="margin-top: 12px; color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; font-size: 18px;">
                                     Total de Pães por Tipo
                                   </h2>
-                                  <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px;">
+                                  <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 16px;">
                                     <thead>
                                       <tr>
                                         <th style="border: 1px solid #ddd; padding: 10px 12px; background-color: #550701; color: white;">Pão</th>
@@ -321,7 +329,7 @@ export default function HistoricoRoteirosPage() {
                                       `).join('')}
                                     </tbody>
                                   </table>
-                                  <p style="margin-top: 8px; font-size: 15px; font-weight: bold;">
+                                  <p style="margin-top: 8px; font-size: 16px; font-weight: bold;">
                                     Total Geral: ${registro.totalGeral} pães
                                   </p>
                                 </body>

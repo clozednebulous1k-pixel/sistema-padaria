@@ -621,11 +621,12 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Roteiro por massa - ${dataFormatada}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
-    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
-    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 16px; }
+    h1 { font-size: 21px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 14px; }
+    .info p { margin: 0; }
     table { width: 100%; border-collapse: collapse; margin: 10px 0; max-width: 640px; }
-    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 16px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
@@ -634,8 +635,7 @@ export default function FiltrarRoteiroView() {
 <body>
   <h1>Roteiro por massa - ${diaSemanaNome}, ${dataFormatada}</h1>
   <div class="info">
-    <p><strong>Período:</strong> ${periodoLabel}</p>
-    <p><strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+    <p><strong>Período:</strong> ${periodoLabel} &nbsp;•&nbsp; <strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
   </div>
   <table>
     <thead>
@@ -689,24 +689,24 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Roteiro - ${dataFormatada} - ${periodoLabel}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
-    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
-    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 16px; }
+    h1 { font-size: 21px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 14px; }
+    .info p { margin: 0; }
     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 16px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .totais-pao { margin-top: 14px; padding: 10px; border-top: 1px solid #ddd; font-size: 13px; }
-    .totais-pao h3 { margin: 0 0 6px; font-size: 15px; }
-    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 17px; }
+    .totais-pao { margin-top: 14px; padding: 10px; border-top: 1px solid #ddd; font-size: 14px; }
+    .totais-pao h3 { margin: 0 0 6px; font-size: 16px; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 18px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <h1>Roteiro - ${diaSemanaNome}, ${dataFormatada}${massasLabel}</h1>
   <div class="info">
-    <p><strong>Período:</strong> ${periodoLabel}</p>
-    <p><strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+    <p><strong>Período:</strong> ${periodoLabel} &nbsp;•&nbsp; <strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
   </div>
   <table>
     <thead>
@@ -780,7 +780,7 @@ export default function FiltrarRoteiroView() {
       font-family: Arial, Helvetica, sans-serif;
       margin: 0;
       padding: 24px 16px 40px;
-      font-size: 16px;
+      font-size: 17px;
       color: #222;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -797,19 +797,19 @@ export default function FiltrarRoteiroView() {
     }
     .linha-data {
       font-weight: 700;
-      font-size: 18px;
+      font-size: 19px;
       color: #7a2e1f;
       margin-bottom: 14px;
       letter-spacing: 0.02em;
     }
     .linha-empresa {
       font-weight: 700;
-      font-size: 17px;
+      font-size: 18px;
       color: #7a2e1f;
       margin-bottom: 16px;
     }
     .linha-produto {
-      font-size: 19px;
+      font-size: 20px;
       color: #222;
       font-weight: 600;
       line-height: 1.35;
@@ -864,22 +864,22 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Massa Doce Cliente - ${dataFormatada}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
-    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
-    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 16px; }
+    h1 { font-size: 21px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 14px; }
+    .info p { margin: 0; }
     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 16px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 17px; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 18px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <h1>Massa Doce Cliente - ${diaSemanaNome}, ${dataFormatada}</h1>
   <div class="info">
-    <p><strong>Período:</strong> ${periodoLabel}</p>
-    <p><strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+    <p><strong>Período:</strong> ${periodoLabel} &nbsp;•&nbsp; <strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
   </div>
   <table>
     <thead>
@@ -934,22 +934,22 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Massa Salgada Cliente - ${dataFormatada}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
-    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
-    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 16px; }
+    h1 { font-size: 21px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 14px; }
+    .info p { margin: 0; }
     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 16px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 17px; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 18px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <h1>Massa Salgada Cliente - ${diaSemanaNome}, ${dataFormatada}</h1>
   <div class="info">
-    <p><strong>Período:</strong> ${periodoLabel}</p>
-    <p><strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+    <p><strong>Período:</strong> ${periodoLabel} &nbsp;•&nbsp; <strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
   </div>
   <table>
     <thead>

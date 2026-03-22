@@ -188,24 +188,22 @@ export default function MassasPage() {
   <head>
     <title>Roteiros de Entregas - ${dataFormatada} - ${periodoLabel}</title>
     <style>
-      body { font-family: Arial, sans-serif; padding: 14px; font-size: 15px; }
-      h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 20px; }
-      .info { margin: 8px 0; padding: 10px 12px; background-color: #f9f9f9; border-left: 4px solid #f3b125; font-size: 13px; }
-      .info p { margin: 2px 0; }
-      table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+      body { font-family: Arial, sans-serif; padding: 14px; font-size: 16px; }
+      h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 21px; }
+      .info { margin: 8px 0; padding: 10px 12px; background-color: #f9f9f9; border-left: 4px solid #f3b125; font-size: 14px; }
+      .info p { margin: 0; }
+      table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 16px; }
       th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
       th { background-color: #550701; color: white; font-weight: bold; }
       td { background-color: #fff; }
       td:last-child { text-align: center; font-weight: bold; }
-      .total { margin-top: 10px; padding: 12px; background-color: #550701; color: white; text-align: center; font-size: 16px; font-weight: bold; }
+      .total { margin-top: 10px; padding: 12px; background-color: #550701; color: white; text-align: center; font-size: 17px; font-weight: bold; }
     </style>
   </head>
   <body>
     <h1>LISTA DE PRODUÇÃO - PÃES POR PRODUTO</h1>
     <div class="info">
-      <p><strong>Data:</strong> ${diaSemanaNome}, ${dataFormatada}</p>
-      <p><strong>Período:</strong> ${periodoLabel}</p>
-      <p><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+      <p><strong>Data:</strong> ${diaSemanaNome}, ${dataFormatada} &nbsp;•&nbsp; <strong>Período:</strong> ${periodoLabel} &nbsp;•&nbsp; <strong>Data de emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
     </div>
     <table>
       <thead>

@@ -861,10 +861,11 @@ function imprimirRoteiroProducao(
         <head>
           <title>Roteiro - ${roteiro.nome}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 14px; font-size: 15px; }
-            h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 20px; }
-            .info { margin: 8px 0; font-size: 13px; }
-            table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+            body { font-family: Arial, sans-serif; padding: 14px; font-size: 16px; }
+            h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 21px; }
+            .info { margin: 8px 0; font-size: 14px; }
+            .info p { margin: 0; }
+            table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 16px; }
             th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
             th { background-color: #550701; color: white; }
           </style>
@@ -872,9 +873,7 @@ function imprimirRoteiroProducao(
         <body>
           <h1>Roteiro de Entregas</h1>
           <div class="info">
-            <p><strong>Roteiro:</strong> ${roteiro.nome}</p>
-            <p><strong>Data:</strong> ${format(dataFiltro, 'dd/MM/yyyy')}</p>
-            <p><strong>Período:</strong> ${periodoFiltro === 'manha' ? 'Manhã' : 'Noite'}</p>
+            <p><strong>Roteiro:</strong> ${roteiro.nome} &nbsp;•&nbsp; <strong>Data:</strong> ${format(dataFiltro, 'dd/MM/yyyy')} &nbsp;•&nbsp; <strong>Período:</strong> ${periodoFiltro === 'manha' ? 'Manhã' : 'Noite'}</p>
           </div>
           <table>
             <thead>
@@ -911,10 +910,11 @@ function imprimirRoteiro(motorista: Motorista, itens: ItemMotorista[]) {
         <head>
           <title>Roteiro - ${motorista.nome}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 14px; font-size: 15px; }
-            h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 20px; }
-            .info { margin: 8px 0; font-size: 13px; }
-            table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+            body { font-family: Arial, sans-serif; padding: 14px; font-size: 16px; }
+            h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 21px; }
+            .info { margin: 8px 0; font-size: 14px; }
+            .info p { margin: 0; }
+            table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 16px; }
             th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
             th { background-color: #550701; color: white; }
           </style>
@@ -922,8 +922,7 @@ function imprimirRoteiro(motorista: Motorista, itens: ItemMotorista[]) {
         <body>
           <h1>Roteiro de Motorista</h1>
           <div class="info">
-            <p><strong>Motorista:</strong> ${motorista.nome}</p>
-            ${motorista.periodo ? `<p><strong>Período:</strong> ${motorista.periodo === 'matutino' ? 'Matutino' : 'Noturno'}</p>` : ''}
+            <p><strong>Motorista:</strong> ${motorista.nome}${motorista.periodo ? ` &nbsp;•&nbsp; <strong>Período:</strong> ${motorista.periodo === 'matutino' ? 'Matutino' : 'Noturno'}` : ''}</p>
           </div>
           <table>
             <thead>
@@ -1020,18 +1019,14 @@ function gerarRomaneiosPorEmpresa(motorista: Motorista, itens: ItemMotorista[], 
     const pageBreakStyle = index === 0 ? '' : 'page-break-before: always;'
     
     return `
-      <div class="romaneio-page" style="${pageBreakStyle} min-height: 100vh; display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; font-size: 13px;">
-        <div class="data" style="text-align: right; color: #666; margin-bottom: 8px; font-size: 12px;">
-          <p><strong>Data de Emissão:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
-        </div>
-        <h1 style="color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 17px;">ROMANEIO DE PEDIDOS</h1>
-        <div class="info" style="margin: 8px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #f3b125; font-size: 12px;">
+      <div class="romaneio-page" style="${pageBreakStyle} min-height: 100vh; display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; font-size: 14px;">
+        <h1 style="color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 18px;">ROMANEIO DE PEDIDOS</h1>
+        <div class="info" style="margin: 8px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #f3b125; font-size: 13px;">
           <p style="margin: 2px 0;"><strong>Empresa/Cliente:</strong> ${empresa}</p>
           <p style="margin: 2px 0;"><strong>Motorista:</strong> ${motorista.nome}</p>
-          ${motorista.periodo ? `<p style="margin: 2px 0;"><strong>Período:</strong> ${motorista.periodo === 'matutino' ? 'Matutino' : 'Noturno'}</p>` : ''}
-          <p style="margin: 2px 0;"><strong>Data de Emissão:</strong> ${format(new Date(), 'dd/MM/yyyy')}</p>
+          <p style="margin: 4px 0 0 0;">${motorista.periodo ? `<strong>Período:</strong> ${motorista.periodo === 'matutino' ? 'Matutino' : 'Noturno'} &nbsp;•&nbsp; ` : ''}<strong>Data de emissão:</strong> ${format(new Date(), 'dd/MM/yyyy')}</p>
         </div>
-        <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px;">
+        <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 14px;">
           <thead>
             <tr>
               <th style="width: 60%; border: 1px solid #ddd; padding: 8px 10px; text-align: left; background-color: #550701; color: white; font-weight: bold;">Produto</th>
@@ -1047,14 +1042,14 @@ function gerarRomaneiosPorEmpresa(motorista: Motorista, itens: ItemMotorista[], 
             `).join('')}
           </tbody>
         </table>
-        <div class="total" style="margin-top: 8px; padding: 10px; background-color: #550701; color: white; text-align: center; font-size: 14px; font-weight: bold;">
+        <div class="total" style="margin-top: 8px; padding: 10px; background-color: #550701; color: white; text-align: center; font-size: 15px; font-weight: bold;">
           Total Geral: ${totalGeral} unidades
         </div>
         <div style="margin-top: auto; padding-top: 30px; border-top: 2px solid #550701;">
           <div style="text-align: center;">
-            <p style="margin-bottom: 25px; font-size: 13px;">_________________________________________</p>
-            <p style="font-size: 13px; font-weight: bold;">Assinatura do Responsável pelo Recebimento</p>
-            <p style="font-size: 12px; color: #666; margin-top: 2px;">Nome e Carimbo da Empresa</p>
+            <p style="margin-bottom: 25px; font-size: 14px;">_________________________________________</p>
+            <p style="font-size: 14px; font-weight: bold;">Assinatura do Responsável pelo Recebimento</p>
+            <p style="font-size: 13px; color: #666; margin-top: 2px;">Nome e Carimbo da Empresa</p>
           </div>
         </div>
       </div>
