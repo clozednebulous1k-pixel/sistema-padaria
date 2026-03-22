@@ -66,6 +66,17 @@ function getDiaSemanaFromDate(date: Date): string {
 }
 
 /** Extrai só o nome de exibição do roteiro (remove prefixo "Roteiro N - "). */
+/** Abreviação do dia (DOM–SAB) alinhada ao modelo de impressão para recorte. */
+const ABREV_DIA_SEMANA = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'] as const
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 function nomeExibicaoRoteiro(observacoes: string | null | undefined, index: number): string {
   const obs = (observacoes || '').trim()
   if (!obs) return `Roteiro ${index + 1}`
@@ -716,6 +727,117 @@ export default function FiltrarRoteiroView() {
 </html>
       `)
     }
+    janela.document.close()
+    janela.focus()
+    janela.print()
+  }
+
+  /**
+   * Lista para recorte: um bloco por linha (empresa + dia | produto + qtd), com espaçamento para tesoura.
+   * Usado quando há filtro por opção de relatório (Embalado, Cortado, etc.).
+   */
+  const abrirRoteiroRecorteParaImpressao = () => {
+    const soRoteiroMassa =
+      massasSelecionadas.size > 0 && opcoesRelatorioSelecionadas.size === 0 && recheiosSelecionados.size === 0
+    if (soRoteiroMassa || opcoesRelatorioSelecionadas.size === 0) {
+      toast.error('Selecione ao menos uma opção de relatório (Embalado, Cortado, etc.) para esta impressão.')
+      return
+    }
+    if (itensFiltrados.length === 0) {
+      toast.error('Nenhum item para imprimir com os filtros atuais.')
+      return
+    }
+    const janela = window.open('', '_blank')
+    if (!janela) {
+      toast.error('Permita pop-ups para abrir a janela de impressão.')
+      return
+    }
+    const dataFormatada = format(dataSelecionada, 'dd/MM/yyyy')
+    const diaSemanaTitulo = format(dataSelecionada, 'EEEE', { locale: ptBR })
+      .replace(/-/g, ' ')
+      .toUpperCase()
+    const cabecalho = `${diaSemanaTitulo} ${dataFormatada}`
+    const abrevDia = ABREV_DIA_SEMANA[dataSelecionada.getDay()] ?? ''
+
+    const blocos = itensFiltrados
+      .map((p) => {
+        const nomePao = `${p.produto_nome}${p.recheio ? ` ${p.recheio}` : ''}${p.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(p.opcao_relatorio)}` : ''}`.trim()
+        const linhaProd = `${escapeHtml(nomePao)} ${p.quantidade}`
+        return `
+    <div class="bloco-recorte">
+      <div class="linha-empresa">
+        <span class="nome-empresa">${escapeHtml(p.empresa)}</span>
+        <span class="abrev-dia">${escapeHtml(abrevDia)}</span>
+      </div>
+      <div class="linha-produto">${linhaProd}</div>
+    </div>`
+      })
+      .join('')
+
+    janela.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Lista para recorte - ${dataFormatada}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 20px 16px 40px;
+      font-size: 14px;
+      color: #222;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .cabecalho {
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+      margin-bottom: 28px;
+      color: #1a1a1a;
+    }
+    .bloco-recorte {
+      padding: 22px 8px 36px;
+      border-bottom: 1px solid #ccc;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .bloco-recorte:last-child {
+      border-bottom: none;
+    }
+    .linha-empresa {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      color: #7a2e1f;
+    }
+    .nome-empresa { flex: 1; text-align: left; }
+    .abrev-dia { flex-shrink: 0; text-align: right; min-width: 2.5rem; }
+    .linha-produto {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 15px;
+      color: #333;
+      font-weight: 500;
+    }
+    @media print {
+      body { padding: 12px 10px 0; }
+      .bloco-recorte { padding: 18px 6px 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="cabecalho">${escapeHtml(cabecalho)}</div>
+  ${blocos}
+</body>
+</html>
+    `)
     janela.document.close()
     janela.focus()
     janela.print()
@@ -1499,15 +1621,38 @@ export default function FiltrarRoteiroView() {
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {itensFiltrados.length} linha(s) · {totalUnidades} un.
                     </span>
-                    <button
-                      type="button"
-                      onClick={abrirRoteiroParaImpressao}
-                      disabled={itensFiltrados.length === 0}
-                      className="px-6 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Abre o roteiro em nova janela para imprimir"
-                    >
-                      Imprimir
-                    </button>
+                    {opcoesRelatorioSelecionadas.size > 0 ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={abrirRoteiroParaImpressao}
+                          disabled={itensFiltrados.length === 0}
+                          className="px-5 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                          title="Roteiro em tabela (Empresa, Pão, Quantidade)"
+                        >
+                          Imprimir tabela
+                        </button>
+                        <button
+                          type="button"
+                          onClick={abrirRoteiroRecorteParaImpressao}
+                          disabled={itensFiltrados.length === 0}
+                          className="px-5 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
+                          title="Lista com espaçamento para recortar cada pedido (modelo etiquetas)"
+                        >
+                          Imprimir lista para recorte
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={abrirRoteiroParaImpressao}
+                        disabled={itensFiltrados.length === 0}
+                        className="px-6 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Abre o roteiro em nova janela para imprimir"
+                      >
+                        Imprimir
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -1555,7 +1700,14 @@ export default function FiltrarRoteiroView() {
             ) : (
               <>
                 <p className="text-gray-500 dark:text-gray-400 text-sm py-2 mb-3">
-                  O botão Imprimir abre o diálogo de impressão do roteiro (Empresa, Pão com recheio/opção, Quantidade).
+                  {opcoesRelatorioSelecionadas.size > 0 ? (
+                    <>
+                      <strong>Imprimir tabela</strong>: roteiro em colunas (empresa, pão, quantidade).{' '}
+                      <strong>Imprimir lista para recorte</strong>: um bloco por pedido com espaço para recortar (modelo etiquetas).
+                    </>
+                  ) : (
+                    <>O botão Imprimir abre o diálogo de impressão do roteiro (Empresa, Pão com recheio/opção, Quantidade).</>
+                  )}
                 </p>
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
                   <table className="w-full text-sm">

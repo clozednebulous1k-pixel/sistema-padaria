@@ -59,17 +59,18 @@ export default function LoginPage() {
 
   return (
     <div className="fixed inset-0 h-screen h-[100dvh] flex items-center justify-center overflow-hidden px-4 sm:px-6">
-      {/* Fundo: cobre toda a tela */}
+      {/* Fundo: só visual — não intercepta cliques (evita “não consigo clicar em nada”) */}
       <div
-        className="absolute inset-0 bg-no-repeat bg-center z-0"
+        className="absolute inset-0 bg-no-repeat bg-center z-0 pointer-events-none"
         style={{
           backgroundImage: 'url(/fundo-login.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
+        aria-hidden
       />
-      <div className="absolute inset-0 bg-black/30 z-0" aria-hidden />
-      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md">
+      <div className="absolute inset-0 bg-black/30 z-0 pointer-events-none" aria-hidden />
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md pointer-events-auto">
       {/* Faixa superior */}
       <header className="text-center mb-4 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
@@ -83,13 +84,13 @@ export default function LoginPage() {
       <div className="relative w-full">
         {/* Card com animação de entrada e vidro */}
         <div
-          className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 border-2 border-primary-200/80 dark:border-gray-600 opacity-0 animate-fade-in-up ring-2 ring-primary-100 dark:ring-gray-600/50"
+          className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 border-2 border-primary-200/80 dark:border-gray-600 animate-fade-in-up motion-reduce:animate-none motion-reduce:opacity-100 ring-2 ring-primary-100 dark:ring-gray-600/50"
           style={{ boxShadow: '0 25px 50px -12px rgba(85, 7, 1, 0.15)' }}
         >
           {/* Logo com leve animação */}
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="absolute -inset-2 rounded-2xl bg-primary-500/10 blur-lg" />
+              <div className="absolute -inset-2 rounded-2xl bg-primary-500/10 blur-lg pointer-events-none" aria-hidden />
               <div className="relative rounded-2xl p-2 bg-white/50 dark:bg-gray-800/50 ring-2 ring-primary-500/20">
                 <Image
                   src="/logo.png"

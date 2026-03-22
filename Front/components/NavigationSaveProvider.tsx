@@ -102,19 +102,36 @@ export function SaveAwareLink({ href, className, children, onClick }: SaveAwareL
   const pathname = usePathname()
   const { flushBeforeNavigate } = useNavigationSave()
 
-  const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
       return
     }
     e.preventDefault()
     onClick?.()
     if (href === pathname) return
-    try {
-      await flushBeforeNavigate()
-    } catch {
-      return
-    }
-    router.push(href)
+
+    const timeoutMs = 25_000
+    void (async () => {
+      try {
+        await Promise.race([
+          flushBeforeNavigate(),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('NAV_FLUSH_TIMEOUT')), timeoutMs)
+          }),
+        ])
+      } catch (err) {
+        if (err instanceof Error && err.message === 'NAV_FLUSH_TIMEOUT') {
+          toast.error(
+            'Salvamento automático demorou demais. Indo para a próxima página — salve manualmente se precisar.',
+            { duration: 5000 }
+          )
+          router.push(href)
+          return
+        }
+        return
+      }
+      router.push(href)
+    })()
   }
 
   return (
