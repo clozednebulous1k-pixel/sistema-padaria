@@ -32,11 +32,14 @@ export default function LixeiraPage() {
     try {
       setLoading(true)
       const data = await lixeiraApi.listar()
-      setDados(data)
+      setDados({
+        ...data,
+        recheios: data.recheios ?? [],
+      })
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Erro ao carregar restauração')
       if (error?.response?.status === 403) {
-        setDados({ produtos: [], empresas: [], motoristas: [], massas: [], roteiros: [] })
+        setDados({ produtos: [], empresas: [], motoristas: [], massas: [], recheios: [], roteiros: [] })
       }
     } finally {
       setLoading(false)
@@ -104,6 +107,14 @@ export default function LixeiraPage() {
     })
   }
 
+  const periodoRoteiroLabel = (p?: string | null) => {
+    if (!p) return '-'
+    const x = String(p).toLowerCase()
+    if (x === 'manha' || x === 'matutino') return 'Manhã'
+    if (x === 'noite' || x === 'noturno') return 'Noite'
+    return p
+  }
+
   const renderTabelaRoteiros = (itens: ItemLixeira[]) => (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-6">
       <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
@@ -120,6 +131,8 @@ export default function LixeiraPage() {
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Roteiro</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Data</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Período</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Motorista</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Excluído em</th>
                 <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Ações</th>
               </tr>
@@ -132,7 +145,9 @@ export default function LixeiraPage() {
                   <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-200">
                     {item.data_producao ? format(new Date(item.data_producao), 'dd/MM/yyyy') : '-'}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-200 capitalize">{item.periodo || '-'}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-200">{periodoRoteiroLabel(item.periodo)}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-200">{item.motorista?.trim() || '—'}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-200 capitalize">{item.status || '—'}</td>
                   <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-200">
                     {item.deletado_em ? format(new Date(item.deletado_em), 'dd/MM/yyyy HH:mm') : '-'}
                   </td>
@@ -244,6 +259,7 @@ export default function LixeiraPage() {
     (dados?.empresas?.length || 0) +
     (dados?.motoristas?.length || 0) +
     (dados?.massas?.length || 0) +
+    (dados?.recheios?.length || 0) +
     (dados?.roteiros?.length || 0)
 
   return (
@@ -254,6 +270,19 @@ export default function LixeiraPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-0.5 text-sm">
             Itens excluídos podem ser restaurados ou removidos permanentemente. Total: {total} itens.
           </p>
+          <div className="mt-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-950 dark:text-amber-100 space-y-2">
+            <p>
+              <strong>O que aparece aqui:</strong> exclusões do sistema (produtos, empresas, motoristas, massas, recheios,
+              roteiros de entrega) enviadas para esta fila antes de apagar de vez.
+            </p>
+            <p>
+              <strong>Não aparece aqui:</strong> o histórico local de impressões de roteiro (fica em{' '}
+              <Link href="/roteiros/historico" className="font-semibold underline hover:no-underline">
+                Roteiros → Histórico de impressões
+              </Link>
+              , apenas neste navegador).
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           {total > 0 && (
@@ -296,6 +325,10 @@ export default function LixeiraPage() {
             { label: 'Período', getVal: (i) => i.periodo || '-' }
           )}
           {renderTabela('Massas', dados.massas, 'massa', 'nome')}
+          {renderTabela('Recheios', dados.recheios || [], 'recheio', 'nome', {
+            label: 'Ordem',
+            getVal: (i) => (i.ordem != null ? String(i.ordem) : '—'),
+          })}
           {renderTabelaRoteiros(dados.roteiros || [])}
         </>
       )}

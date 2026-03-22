@@ -456,6 +456,7 @@ export interface ItemLixeira {
   periodo?: string;
   ordem?: number;
   status?: string;
+  motorista?: string | null;
 }
 
 export interface LixeiraData {
@@ -463,6 +464,7 @@ export interface LixeiraData {
   empresas: ItemLixeira[];
   motoristas: ItemLixeira[];
   massas: ItemLixeira[];
+  recheios: ItemLixeira[];
   roteiros: ItemLixeira[];
 }
 

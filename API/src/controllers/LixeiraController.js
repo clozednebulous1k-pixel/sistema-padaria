@@ -23,7 +23,7 @@ class LixeiraController {
         });
       }
 
-      const [produtos, empresasRaw, motoristas, massas, roteiros] = await Promise.all([
+      const [produtos, empresasRaw, motoristas, massas, recheios, roteiros] = await Promise.all([
         pool.query(
           'SELECT id, nome, descricao, preco, deletado_em FROM produtos_padaria WHERE deletado_em IS NOT NULL ORDER BY deletado_em DESC'
         ),
@@ -35,6 +35,9 @@ class LixeiraController {
         ),
         pool.query(
           'SELECT id, nome, ordem, deletado_em FROM massas_padaria WHERE deletado_em IS NOT NULL ORDER BY deletado_em DESC'
+        ),
+        pool.query(
+          'SELECT id, nome, ordem, deletado_em FROM recheios_padaria WHERE deletado_em IS NOT NULL ORDER BY deletado_em DESC'
         ),
         pool.query(
           'SELECT id, nome_empresa, observacoes, data_producao, motorista, periodo, status, deletado_em FROM roteiros_padaria WHERE deletado_em IS NOT NULL ORDER BY deletado_em DESC'
@@ -50,6 +53,7 @@ class LixeiraController {
           empresas,
           motoristas: motoristas.rows,
           massas: massas.rows,
+          recheios: recheios.rows,
           roteiros: roteiros.rows,
         },
       });
@@ -79,7 +83,7 @@ class LixeiraController {
       if (!tipo) {
         return res.status(400).json({
           success: false,
-          message: 'Tipo é obrigatório (produto, empresa, motorista, massa, roteiro)',
+          message: 'Tipo é obrigatório (produto, empresa, motorista, massa, recheio, roteiro)',
         });
       }
 
@@ -174,6 +178,29 @@ class LixeiraController {
         return res.json({ success: true, message: 'Massa restaurada', data: r.rows[0] });
       }
 
+      if (tipo === 'recheio') {
+        if (!nome) return res.status(400).json({ success: false, message: 'Nome obrigatório para recheio' });
+        const nomeDecoded = decodeURIComponent(nome);
+        const r = await pool.query(
+          'UPDATE recheios_padaria SET deletado_em = NULL WHERE nome = $1 AND deletado_em IS NOT NULL RETURNING *',
+          [nomeDecoded]
+        );
+        if (r.rows.length === 0) {
+          return res.status(404).json({ success: false, message: 'Recheio não encontrado na lixeira' });
+        }
+        registrarAcaoManual({
+          usuario_id: req.usuario.id,
+          usuario_nome: req.usuario.nome || 'Desconhecido',
+          usuario_email: req.usuario.email || 'desconhecido@email.com',
+          acao: 'RESTAURAR',
+          entidade: 'recheio',
+          entidade_id: r.rows[0].id,
+          descricao: `Restaurou recheio "${nomeDecoded}" da lixeira`,
+          user_agent,
+        }).catch(() => {});
+        return res.json({ success: true, message: 'Recheio restaurado', data: r.rows[0] });
+      }
+
       if (tipo === 'roteiro') {
         if (!id) return res.status(400).json({ success: false, message: 'ID obrigatório' });
         const r = await pool.query(
@@ -223,7 +250,7 @@ class LixeiraController {
       if (!tipo) {
         return res.status(400).json({
           success: false,
-          message: 'Tipo é obrigatório (produto, empresa, motorista, massa, roteiro)',
+          message: 'Tipo é obrigatório (produto, empresa, motorista, massa, recheio, roteiro)',
         });
       }
 
@@ -318,6 +345,29 @@ class LixeiraController {
         return res.json({ success: true, message: 'Massa excluída permanentemente' });
       }
 
+      if (tipo === 'recheio') {
+        if (!nome) return res.status(400).json({ success: false, message: 'Nome obrigatório para recheio' });
+        const nomeDecoded = decodeURIComponent(nome);
+        const r = await pool.query(
+          'DELETE FROM recheios_padaria WHERE nome = $1 AND deletado_em IS NOT NULL RETURNING id, nome',
+          [nomeDecoded]
+        );
+        if (r.rows.length === 0) {
+          return res.status(404).json({ success: false, message: 'Recheio não encontrado na lixeira' });
+        }
+        registrarAcaoManual({
+          usuario_id: req.usuario.id,
+          usuario_nome: req.usuario.nome || 'Desconhecido',
+          usuario_email: req.usuario.email || 'desconhecido@email.com',
+          acao: 'EXCLUIR_DEFINITIVO',
+          entidade: 'recheio',
+          entidade_id: r.rows[0].id,
+          descricao: `Excluiu permanentemente recheio "${nomeDecoded}"`,
+          user_agent,
+        }).catch(() => {});
+        return res.json({ success: true, message: 'Recheio excluído permanentemente' });
+      }
+
       if (tipo === 'roteiro') {
         if (!id) return res.status(400).json({ success: false, message: 'ID obrigatório' });
         const r = await pool.query(
@@ -364,11 +414,12 @@ class LixeiraController {
 
       const user_agent = req.headers['user-agent'] || 'unknown';
 
-      const [rProdutos, rEmpresas, rMotoristas, rMassas, rRoteiros] = await Promise.all([
+      const [rProdutos, rEmpresas, rMotoristas, rMassas, rRecheios, rRoteiros] = await Promise.all([
         pool.query('DELETE FROM produtos_padaria WHERE deletado_em IS NOT NULL RETURNING id, nome'),
         pool.query('DELETE FROM empresas_padaria WHERE deletado_em IS NOT NULL RETURNING id, nome'),
         pool.query('DELETE FROM motoristas_padaria WHERE deletado_em IS NOT NULL RETURNING id, nome'),
         pool.query('DELETE FROM massas_padaria WHERE deletado_em IS NOT NULL RETURNING id, nome'),
+        pool.query('DELETE FROM recheios_padaria WHERE deletado_em IS NOT NULL RETURNING id, nome'),
         pool.query('DELETE FROM roteiros_padaria WHERE deletado_em IS NOT NULL RETURNING id, nome_empresa'),
       ]);
 
@@ -377,6 +428,7 @@ class LixeiraController {
         rEmpresas.rows.length +
         rMotoristas.rows.length +
         rMassas.rows.length +
+        rRecheios.rows.length +
         rRoteiros.rows.length;
 
       if (total > 0) {

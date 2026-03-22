@@ -2,6 +2,7 @@
  * Impressão padrão de "Roteiro de Entregas" — usada na lista de roteiros e na edição (/roteiros/[id]/editar).
  * Mantém HTML idêntico em todos os pontos.
  */
+import { CSS_IMPRESSAO_TABELA_BASE } from '@/lib/cssImpressaoPadrao'
 import { opcaoRelatorioParaLabel } from '@/lib/opcoesRelatorio'
 
 /** Número do slot em observações tipo "Roteiro 2 ..." */
@@ -82,18 +83,7 @@ export function imprimirRoteiroEntregas(params: {
           <head>
             <title>${tituloDoc} - ${nomeRoteiro} - ${diaSemana}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 18px; font-size: 17px; }
-              h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 8px; margin-bottom: 12px; font-size: 23px; }
-              .info { margin: 10px 0; font-size: 16px; }
-              .info p { margin: 0; }
-              table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 17px; }
-              th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; }
-              th { background-color: #550701; color: white; }
-              .totais { margin-top: 16px; padding: 12px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; }
-              .totais h3 { margin: 0 0 10px 0; font-size: 18px; color: #333; }
-              .totais table { margin: 0; font-size: 16px; }
-              .totais th, .totais td { padding: 10px 12px; }
-              .total-geral { margin-top: 10px; padding: 14px; background-color: #550701; color: white; text-align: center; font-weight: bold; font-size: 18px; border-radius: 4px; }
+              ${CSS_IMPRESSAO_TABELA_BASE}
             </style>
           </head>
           <body style="font-size: ${tamanhoPercent}%;">
