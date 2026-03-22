@@ -608,18 +608,27 @@ function EditarRoteirosPorDataContent() {
             <div className="bg-gray-50 p-2 rounded-lg" style={{ fontFamily: 'Arial, sans-serif' }}>
               {itens && itens.length > 0 && itens.some((item) => item.nome_empresa && item.nome_empresa.trim() && item.produto_id > 0) ? (
                 <>
-                  <h1 style={{ color: '#333', borderBottom: '2px solid #550701', paddingBottom: '5px', marginBottom: '8px', fontSize: '16px' }}>
+                  <h1 style={{ color: '#333', borderBottom: '2px solid #550701', paddingBottom: '8px', marginBottom: '12px', fontSize: '18px', textAlign: 'center', fontWeight: 'bold' }}>
                     Roteiro de Entregas
                   </h1>
-                  <div style={{ marginBottom: '10px' }}>
-                    <p style={{ fontSize: '12px' }}><strong>Dia:</strong> {diaParam}</p>
+                  <div style={{ marginBottom: '14px', fontSize: '14px', textAlign: 'center', lineHeight: 1.5 }}>
+                    <p style={{ margin: 0 }}>
+                      <strong>Dia:</strong> {diaParam}
+                      <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                      <strong>Data:</strong>{' '}
+                      {roteiroExistente?.data_producao
+                        ? format(parseISO(roteiroExistente.data_producao.split('T')[0]), 'dd/MM/yyyy')
+                        : '-'}
+                      <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                      <strong>Período:</strong> {periodoParam === 'manha' ? 'Manhã' : 'Noite'}
+                    </p>
                   </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '11px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '13px' }}>
                     <thead>
                       <tr>
-                        <th style={{ border: '1px solid #ddd', padding: '4px 6px', backgroundColor: '#550701', color: 'white', textAlign: 'left', fontSize: '11px' }}>Empresa</th>
-                        <th style={{ border: '1px solid #ddd', padding: '4px 6px', backgroundColor: '#550701', color: 'white', textAlign: 'left', fontSize: '11px' }}>Pão</th>
-                        <th style={{ border: '1px solid #ddd', padding: '4px 6px', backgroundColor: '#550701', color: 'white', textAlign: 'center', fontSize: '11px' }}>Qtd</th>
+                        <th style={{ border: '1px solid #ddd', padding: '8px 10px', backgroundColor: '#550701', color: 'white', textAlign: 'left', fontSize: '12px' }}>Empresa</th>
+                        <th style={{ border: '1px solid #ddd', padding: '8px 10px', backgroundColor: '#550701', color: 'white', textAlign: 'left', fontSize: '12px' }}>Pão</th>
+                        <th style={{ border: '1px solid #ddd', padding: '8px 10px', backgroundColor: '#550701', color: 'white', textAlign: 'center', fontSize: '12px' }}>Qtd</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -629,9 +638,9 @@ function EditarRoteirosPorDataContent() {
                           const produto = produtos.find((p) => p.id === item.produto_id)
                           return (
                             <tr key={index}>
-                              <td style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'left', fontSize: '11px' }}>{item.nome_empresa || '-'}</td>
-                              <td style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'left', fontSize: '11px' }}>{produto?.nome || 'Produto não selecionado'}</td>
-                              <td style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'center', fontSize: '11px' }}>{item.quantidade || 0}</td>
+                              <td style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'left', fontSize: '13px' }}>{item.nome_empresa || '-'}</td>
+                              <td style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'left', fontSize: '13px' }}>{produto?.nome || 'Produto não selecionado'}</td>
+                              <td style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'center', fontSize: '13px' }}>{item.quantidade || 0}</td>
                             </tr>
                           )
                         })}
@@ -655,26 +664,26 @@ function EditarRoteirosPorDataContent() {
                     
                     return (
                       <>
-                        <h2 style={{ marginTop: '10px', color: '#333', borderBottom: '2px solid #550701', paddingBottom: '5px', fontSize: '14px' }}>
+                        <h2 style={{ marginTop: '10px', color: '#333', borderBottom: '2px solid #550701', paddingBottom: '6px', fontSize: '16px', textAlign: 'center', fontWeight: 'bold' }}>
                           Total de Pães por Tipo
                         </h2>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '11px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '13px' }}>
                           <thead>
                             <tr>
-                              <th style={{ border: '1px solid #ddd', padding: '4px 6px', backgroundColor: '#550701', color: 'white', textAlign: 'left', fontSize: '11px' }}>Pão</th>
-                              <th style={{ border: '1px solid #ddd', padding: '4px 6px', backgroundColor: '#550701', color: 'white', textAlign: 'center', fontSize: '11px' }}>Total</th>
+                              <th style={{ border: '1px solid #ddd', padding: '8px 10px', backgroundColor: '#550701', color: 'white', textAlign: 'left', fontSize: '12px' }}>Pão</th>
+                              <th style={{ border: '1px solid #ddd', padding: '8px 10px', backgroundColor: '#550701', color: 'white', textAlign: 'center', fontSize: '12px' }}>Total</th>
                             </tr>
                           </thead>
                           <tbody>
                             {totaisArray.map((total, index) => (
                               <tr key={index}>
-                                <td style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'left', fontSize: '11px' }}>{total.pao}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'center', fontWeight: 'bold', fontSize: '11px' }}>{total.quantidadeTotal}</td>
+                                <td style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'left', fontSize: '13px' }}>{total.pao}</td>
+                                <td style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'center', fontWeight: 'bold', fontSize: '13px' }}>{total.quantidadeTotal}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
-                        <p style={{ marginTop: '8px', fontSize: '12px', fontWeight: 'bold' }}>
+                        <p style={{ marginTop: '8px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
                           Total Geral: {totalGeral} pães
                         </p>
                       </>

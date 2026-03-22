@@ -10,6 +10,7 @@ import { format, addDays, subDays, parseISO, startOfMonth, endOfMonth, eachDayOf
 import * as XLSX from 'xlsx'
 import ConfirmModal from '@/components/ConfirmModal'
 import { opcaoRelatorioParaLabel } from '@/lib/opcoesRelatorio'
+import { imprimirRoteiroEntregas, nomeExibicaoRoteiro } from '@/lib/imprimirRoteiroEntregas'
 
 const statusLabels: Record<RoteiroStatus, string> = {
   pendente: 'Pendente',
@@ -39,17 +40,6 @@ const STORAGE_KEY_HISTORICO = 'historico_roteiros_producao'
 const STORAGE_KEY_DATA_SELECIONADA = 'data_selecionada_roteiros'
 const STORAGE_KEY_ROTEIRO_COPIADO = 'roteiro_copiado_producao'
 const STORAGE_KEY_SLOT_COPIADO = 'slot_copiado_producao'
-
-/** Extrai o nome de exibição do roteiro (parte após "Roteiro N - "). Preserva o slot pela convenção "Roteiro N" em observacoes. */
-function nomeExibicaoRoteiro(observacoes: string | null | undefined, slotIndex: number): string {
-  const obs = (observacoes || '').trim()
-  if (!obs) return ''
-  const n = slotIndex + 1
-  const regex = new RegExp(`^Roteiro\\s*${n}\\s*[-–—]?\\s*(.*)$`, 'i')
-  const m = obs.match(regex)
-  if (m) return (m[1] || '').trim()
-  return obs
-}
 
 interface ItemConsolidado {
   empresa: string
@@ -186,7 +176,7 @@ export default function RoteirosPage() {
     nomeRoteiro: string
     diaSemana: string
     dataDia: string
-    itens: Array<{ observacao?: string | null; produto_nome?: string; produto_id: number; quantidade: number; opcao_relatorio?: string | null }>
+    itens: Array<{ observacao?: string | null; produto_nome?: string; produto_id: number; quantidade: number; opcao_relatorio?: string | null; recheio?: string | null }>
     totaisOrdenados: [string, number][]
     totalGeral: number
   } | null>(null)
@@ -416,89 +406,15 @@ export default function RoteirosPage() {
     tipo: 'roteiro' | 'romaneio' = 'roteiro',
     tamanhoPercent: number = 100
   ) => {
-    const tituloDoc = tipo === 'romaneio' ? 'Romaneio' : 'Roteiro de Entregas'
-    const tituloH1 = tipo === 'romaneio' ? 'Romaneio de Entrega' : 'Roteiro de Entregas'
-    const totaisPorPao = itens.reduce((acc, item) => {
-      const nome = item.produto_nome || `ID: ${item.produto_id}`
-      acc[nome] = (acc[nome] || 0) + Number(item.quantidade)
-      return acc
-    }, {} as Record<string, number>)
-    const totaisOrdenados = Object.entries(totaisPorPao).sort((a, b) => a[0].localeCompare(b[0]))
-    const totalGeral = totaisOrdenados.reduce((sum, [, qtd]) => sum + qtd, 0)
-
-    const janelaImpressao = window.open('', '_blank')
-    if (janelaImpressao) {
-      janelaImpressao.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>${tituloDoc} - ${nomeRoteiro} - ${diaSemana}</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 18px; font-size: 17px; }
-              h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 8px; margin-bottom: 12px; font-size: 23px; }
-              .info { margin: 10px 0; font-size: 16px; }
-              .info p { margin: 0; }
-              table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 17px; }
-              th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; }
-              th { background-color: #550701; color: white; }
-              .totais { margin-top: 16px; padding: 12px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; }
-              .totais h3 { margin: 0 0 10px 0; font-size: 18px; color: #333; }
-              .totais table { margin: 0; font-size: 16px; }
-              .totais th, .totais td { padding: 10px 12px; }
-              .total-geral { margin-top: 10px; padding: 14px; background-color: #550701; color: white; text-align: center; font-weight: bold; font-size: 18px; border-radius: 4px; }
-            </style>
-          </head>
-          <body style="font-size: ${tamanhoPercent}%;">
-            <h1>${tituloH1}</h1>
-            <div class="info">
-              <p><strong>Roteiro:</strong> ${nomeRoteiro} &nbsp;•&nbsp; <strong>Dia:</strong> ${diaSemana} &nbsp;•&nbsp; <strong>Data:</strong> ${dataDia} &nbsp;•&nbsp; <strong>Período:</strong> ${periodoSelecionado === 'manha' ? 'Manhã' : 'Noite'}</p>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Empresa</th>
-                  <th>Pão</th>
-                  <th>Quantidade</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itens.map((item) => {
-                  const paoLabel = (item.produto_nome || `ID: ${item.produto_id}`) + (item.recheio ? ` ${item.recheio}` : '') + (item.opcao_relatorio ? ` ${opcaoRelatorioParaLabel(item.opcao_relatorio)}` : '')
-                  return `
-                  <tr>
-                    <td>${item.observacao || '-'}</td>
-                    <td>${paoLabel}</td>
-                    <td>${item.quantidade}</td>
-                  </tr>
-                `}).join('')}
-              </tbody>
-            </table>
-            <div class="totais">
-              <h3>Total de pães por tipo</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Pão</th>
-                    <th>Quantidade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${totaisOrdenados.map(([pao, qtd]) => `
-                    <tr>
-                      <td>${pao}</td>
-                      <td style="text-align: right; font-weight: bold;">${qtd}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-              <div class="total-geral">Total geral: ${totalGeral} unidade${totalGeral !== 1 ? 's' : ''}</div>
-            </div>
-          </body>
-        </html>
-      `)
-      janelaImpressao.document.close()
-      janelaImpressao.print()
-    }
+    imprimirRoteiroEntregas({
+      nomeRoteiro,
+      diaSemana,
+      dataDia,
+      periodoLabel: periodoSelecionado === 'manha' ? 'Manhã' : 'Noite',
+      itens,
+      tamanhoPercent,
+      tituloVariant: tipo === 'romaneio' ? 'romaneio' : 'roteiro',
+    })
   }
 
   /**
@@ -1977,16 +1893,21 @@ export default function RoteirosPage() {
                 }}
               >
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-inner max-w-4xl mx-auto">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 border-b-2 border-primary-600 pb-1 mb-3">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 border-b-2 border-primary-600 pb-2 mb-4 text-center">
                   Roteiro de Entregas
                 </h1>
-                <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-base text-gray-800 dark:text-gray-200">
-                  <p><strong>Roteiro:</strong> {modalImpressaoRoteiro.nomeRoteiro}</p>
-                  <p><strong>Dia:</strong> {modalImpressaoRoteiro.diaSemana}</p>
-                  <p><strong>Data:</strong> {modalImpressaoRoteiro.dataDia}</p>
-                  <p><strong>Período:</strong> {periodoSelecionado === 'manha' ? 'Manhã' : 'Noite'}</p>
+                <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-base sm:text-lg text-gray-800 dark:text-gray-200 text-center leading-relaxed">
+                  <p className="m-0">
+                    <strong>Roteiro:</strong> {modalImpressaoRoteiro.nomeRoteiro}
+                    <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                    <strong>Dia:</strong> {modalImpressaoRoteiro.diaSemana}
+                    <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                    <strong>Data:</strong> {modalImpressaoRoteiro.dataDia}
+                    <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                    <strong>Período:</strong> {periodoSelecionado === 'manha' ? 'Manhã' : 'Noite'}
+                  </p>
                 </div>
-                <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-base">
+                <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-base md:text-lg">
                   <thead>
                     <tr className="bg-primary-600 text-white">
                       <th className="border border-gray-300 dark:border-gray-600 p-3 text-left">Empresa</th>

@@ -12,6 +12,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { SelectComBusca } from '@/components/SelectComBusca'
 import { opcaoRelatorioParaLabel } from '@/lib/opcoesRelatorio'
 import { formatarDataProducaoBR } from '@/lib/formatarDataBrasil'
+import { getNomeRoteiroImpressaoFromObservacoes, imprimirRoteiroEntregas } from '@/lib/imprimirRoteiroEntregas'
 
 interface FormData {
   data_producao: string
@@ -389,6 +390,7 @@ export default function EditarRoteiroPage() {
   const itensParaTabela = Object.entries(itensPorEmpresa).flatMap(([empresa, items]) =>
     items.map((item) => ({
       empresa,
+      produto_id: item.produto_id,
       produto_nome: item.produto_nome,
       quantidade: item.quantidade,
       opcao_relatorio: item.opcao_relatorio,
@@ -409,79 +411,38 @@ export default function EditarRoteiroPage() {
       toast.error('Adicione itens ao roteiro para imprimir')
       return
     }
-    const dataProd = formatarDataProducaoBR(watch('data_producao'))
-    const periodoVal = watch('periodo')
-    const periodoLabel = periodoVal === 'manha' ? 'Manhã' : periodoVal === 'noite' ? 'Noite' : periodoVal === 'tarde' ? 'Tarde' : periodoVal || '-'
-    const diaLabel = roteiro?.nome_empresa || '-'
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Impressão - Roteiro de Entregas</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; font-size: 16px; }
-          .card { padding: 16px; border: 1px solid #ddd; border-radius: 8px; background: #f9fafb; }
-          h3 { margin: 0 0 10px 0; font-size: 21px; border-bottom: 2px solid #550701; padding-bottom: 5px; }
-          .info { font-size: 15px; margin-bottom: 15px; }
-          .info p { margin: 0; }
-          table { width: 100%; border-collapse: collapse; font-size: 16px; margin-bottom: 15px; }
-          th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
-          th { background: #550701; color: white; font-size: 15px; }
-          td.qtd { text-align: center; font-weight: bold; }
-          .total-por-tipo { margin-top: 15px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 4px; }
-          .total-por-tipo h4 { margin: 0 0 8px 0; font-size: 17px; color: #550701; }
-          .total-por-tipo ul { margin: 0; padding-left: 20px; font-size: 15px; }
-          .total-por-tipo li { margin: 4px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <h3>Roteiro de Entregas</h3>
-          <div class="info">
-            <p><strong>Dia:</strong> ${diaLabel} &nbsp;•&nbsp; <strong>Data:</strong> ${dataProd} &nbsp;•&nbsp; <strong>Período:</strong> ${periodoLabel}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>Pão</th>
-                <th style="text-align:center">Quantidade</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itensParaTabela.map((item) => {
-                const partes = [item.produto_nome]
-                if (item.recheio) partes.push(item.recheio)
-                if (item.opcao_relatorio) partes.push(opcaoRelatorioParaLabel(item.opcao_relatorio))
-                const nomePao = partes.join(' ')
-                return `
-                <tr>
-                  <td>${item.empresa}</td>
-                  <td>${nomePao}</td>
-                  <td class="qtd">${item.quantidade}</td>
-                </tr>
-              `}).join('')}
-            </tbody>
-          </table>
-          <div class="total-por-tipo">
-            <h4>Pães por tipo</h4>
-            <ul>
-              ${Object.entries(totalPorTipo).map(([nome, qtd]) => `<li><strong>${nome}:</strong> ${qtd}</li>`).join('')}
-            </ul>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-    const janela = window.open('', '_blank')
-    if (janela) {
-      janela.document.write(htmlContent)
-      janela.document.close()
-      janela.focus()
-      setTimeout(() => janela.print(), 100)
+    if (!roteiro) {
+      toast.error('Roteiro não carregado')
+      return
     }
+    const periodoVal = watch('periodo')
+    const periodoLabel =
+      periodoVal === 'manha'
+        ? 'Manhã'
+        : periodoVal === 'noite'
+          ? 'Noite'
+          : periodoVal === 'tarde'
+            ? 'Tarde'
+            : periodoVal || '-'
+    const nomeRoteiro = getNomeRoteiroImpressaoFromObservacoes(roteiro.observacoes)
+    const diaSemana = roteiro.nome_empresa || '-'
+    const dataDia = formatarDataProducaoBR(watch('data_producao'))
+    const itensImpressao = itensParaTabela.map((item) => ({
+      observacao: item.empresa,
+      produto_nome: item.produto_nome,
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      opcao_relatorio: item.opcao_relatorio,
+      recheio: item.recheio,
+    }))
+    imprimirRoteiroEntregas({
+      nomeRoteiro,
+      diaSemana,
+      dataDia,
+      periodoLabel,
+      itens: itensImpressao,
+      tamanhoPercent: 100,
+    })
   }
 
   return (
@@ -719,20 +680,25 @@ export default function EditarRoteiroPage() {
             {itensParaTabela.length > 0 ? (
               <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div style={{ fontFamily: 'Arial, sans-serif' }}>
-                  <h3 style={{ color: darkMode ? '#f1f5f9' : '#333', borderBottom: `2px solid ${darkMode ? '#0d9488' : '#550701'}`, paddingBottom: '5px', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                  <h3 style={{ color: darkMode ? '#f1f5f9' : '#333', borderBottom: `2px solid ${darkMode ? '#0d9488' : '#550701'}`, paddingBottom: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>
                     Roteiro de Entregas
                   </h3>
-                  <div style={{ marginBottom: '10px', fontSize: '12px', color: darkMode ? '#e2e8f0' : '#333' }}>
-                    <p><strong>Dia:</strong> {roteiro?.nome_empresa || '-'}</p>
-                    <p><strong>Data:</strong> {formatarDataProducaoBR(watch('data_producao'))}</p>
-                    <p><strong>Período:</strong> {watch('periodo') === 'manha' ? 'Manhã' : watch('periodo') === 'noite' ? 'Noite' : watch('periodo') || '-'}</p>
+                  <div style={{ marginBottom: '14px', fontSize: '14px', color: darkMode ? '#e2e8f0' : '#333', textAlign: 'center', lineHeight: 1.5 }}>
+                    <p style={{ margin: 0 }}>
+                      <strong>Dia:</strong> {roteiro?.nome_empresa || '-'}
+                      <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                      <strong>Data:</strong> {formatarDataProducaoBR(watch('data_producao'))}
+                      <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                      <strong>Período:</strong>{' '}
+                      {watch('periodo') === 'manha' ? 'Manhã' : watch('periodo') === 'noite' ? 'Noite' : watch('periodo') || '-'}
+                    </p>
                   </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '11px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '13px' }}>
                     <thead>
                       <tr>
-                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '10px' }}>Empresa</th>
-                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '10px' }}>Pão</th>
-                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'center', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '10px' }}>Quantidade</th>
+                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '12px' }}>Empresa</th>
+                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '12px' }}>Pão</th>
+                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'center', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '12px' }}>Quantidade</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -743,16 +709,16 @@ export default function EditarRoteiroPage() {
                         const nomePao = partes.join(' ')
                         return (
                         <tr key={idx}>
-                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '10px' }}>{item.empresa}</td>
-                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '10px' }}>{nomePao}</td>
-                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'center', fontWeight: 'bold', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '10px' }}>{item.quantidade}</td>
+                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '13px' }}>{item.empresa}</td>
+                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '13px' }}>{nomePao}</td>
+                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'center', fontWeight: 'bold', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '13px' }}>{item.quantidade}</td>
                         </tr>
                       )})}
                     </tbody>
                   </table>
                   <div style={{ padding: '12px', backgroundColor: darkMode ? '#1e293b' : '#fff', border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, borderRadius: '4px' }}>
-                    <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: darkMode ? '#0d9488' : '#550701', fontWeight: 'bold' }}>Pães por tipo</h4>
-                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '11px', color: darkMode ? '#e2e8f0' : '#333' }}>
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: darkMode ? '#0d9488' : '#550701', fontWeight: 'bold', textAlign: 'center' }}>Pães por tipo</h4>
+                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: darkMode ? '#e2e8f0' : '#333' }}>
                       {Object.entries(totalPorTipo).map(([nome, qtd]) => (
                         <li key={nome} style={{ margin: '4px 0' }}><strong>{nome}:</strong> {qtd}</li>
                       ))}

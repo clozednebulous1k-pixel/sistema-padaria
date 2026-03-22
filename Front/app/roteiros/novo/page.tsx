@@ -656,20 +656,24 @@ function NovoRoteiroContent() {
             {itensParaTabela.length > 0 ? (
               <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div style={{ fontFamily: 'Arial, sans-serif' }}>
-                  <h3 style={{ color: darkMode ? '#f1f5f9' : '#333', borderBottom: `2px solid ${darkMode ? '#0d9488' : '#550701'}`, paddingBottom: '5px', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                  <h3 style={{ color: darkMode ? '#f1f5f9' : '#333', borderBottom: `2px solid ${darkMode ? '#0d9488' : '#550701'}`, paddingBottom: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>
                     Roteiro de Entregas
                   </h3>
-                  <div style={{ marginBottom: '10px', fontSize: '12px', color: darkMode ? '#e2e8f0' : '#333' }}>
-                    <p><strong>Dia:</strong> {diaParam}</p>
-                    <p><strong>Data:</strong> {formatarDataProducaoBR(dataParam || format(new Date(), 'yyyy-MM-dd'))}</p>
-                    <p><strong>Período:</strong> {periodoParam === 'manha' ? 'Manhã' : 'Noite'}</p>
+                  <div style={{ marginBottom: '14px', fontSize: '14px', color: darkMode ? '#e2e8f0' : '#333', textAlign: 'center', lineHeight: 1.5 }}>
+                    <p style={{ margin: 0 }}>
+                      <strong>Dia:</strong> {diaParam}
+                      <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                      <strong>Data:</strong> {formatarDataProducaoBR(dataParam || format(new Date(), 'yyyy-MM-dd'))}
+                      <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                      <strong>Período:</strong> {periodoParam === 'manha' ? 'Manhã' : 'Noite'}
+                    </p>
                   </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '11px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '13px' }}>
                     <thead>
                       <tr>
-                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '10px' }}>Empresa</th>
-                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '10px' }}>Pão</th>
-                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'center', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '10px' }}>Quantidade</th>
+                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '12px' }}>Empresa</th>
+                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'left', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '12px' }}>Pão</th>
+                        <th style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'center', backgroundColor: darkMode ? '#0d9488' : '#550701', color: 'white', fontSize: '12px' }}>Quantidade</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -680,16 +684,16 @@ function NovoRoteiroContent() {
                         const nomePao = partes.join(' ')
                         return (
                         <tr key={idx}>
-                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '10px' }}>{item.empresa}</td>
-                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '10px' }}>{nomePao}</td>
-                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '6px', textAlign: 'center', fontWeight: 'bold', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '10px' }}>{item.quantidade}</td>
+                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '13px' }}>{item.empresa}</td>
+                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '13px' }}>{nomePao}</td>
+                          <td style={{ border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, padding: '8px 10px', textAlign: 'center', fontWeight: 'bold', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#f1f5f9' : '#333', fontSize: '13px' }}>{item.quantidade}</td>
                         </tr>
                       )})}
                     </tbody>
                   </table>
                   <div style={{ padding: '12px', backgroundColor: darkMode ? '#1e293b' : '#fff', border: `1px solid ${darkMode ? '#475569' : '#ddd'}`, borderRadius: '4px' }}>
-                    <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: darkMode ? '#0d9488' : '#550701', fontWeight: 'bold' }}>Pães por tipo</h4>
-                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '11px', color: darkMode ? '#e2e8f0' : '#333' }}>
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: darkMode ? '#0d9488' : '#550701', fontWeight: 'bold', textAlign: 'center' }}>Pães por tipo</h4>
+                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: darkMode ? '#e2e8f0' : '#333' }}>
                       {Object.entries(totalPorTipo).sort(([a], [b]) => a.localeCompare(b)).map(([nome, qtd]) => (
                         <li key={nome} style={{ margin: '4px 0' }}><strong>{nome}:</strong> {qtd}</li>
                       ))}

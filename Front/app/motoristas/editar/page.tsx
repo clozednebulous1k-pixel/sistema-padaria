@@ -1081,32 +1081,47 @@ function EditarRoteirosMotoristaContent() {
                   return (
                     <div key={empresa} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                       <div style={{ fontFamily: 'Arial, sans-serif' }}>
-                        <h3 style={{ color: '#333', borderBottom: '2px solid #550701', paddingBottom: '5px', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                        <h3 style={{ color: '#333', borderBottom: '2px solid #550701', paddingBottom: '8px', marginBottom: '12px', fontSize: '18px', fontWeight: 'bold', textAlign: 'center' }}>
                           Roteiro de Motorista
                         </h3>
-                        <div style={{ marginBottom: '10px', fontSize: '12px' }}>
-                          <p><strong>Motorista:</strong> {motoristaParam}</p>
-                          <p><strong>Data:</strong> {watch('data_producao') || format(dataSelecionada, 'yyyy-MM-dd')}</p>
-                          <p><strong>Período:</strong> {periodoSelecionado === 'manha' ? 'Manhã' : 'Noite'}</p>
-                          <p><strong>Empresa:</strong> {empresa}</p>
+                        <div style={{ marginBottom: '12px', fontSize: '14px', textAlign: 'center', lineHeight: 1.5 }}>
+                          <p style={{ margin: '0 0 6px 0' }}>
+                            <strong>Motorista:</strong> {motoristaParam}
+                            <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                            <strong>Data:</strong>{' '}
+                            {(() => {
+                              const raw = watch('data_producao')
+                              if (!raw) return format(dataSelecionada, 'dd/MM/yyyy')
+                              try {
+                                return format(parseISO(String(raw).split('T')[0]), 'dd/MM/yyyy')
+                              } catch {
+                                return format(dataSelecionada, 'dd/MM/yyyy')
+                              }
+                            })()}
+                            <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+                            <strong>Período:</strong> {periodoSelecionado === 'manha' ? 'Manhã' : 'Noite'}
+                          </p>
+                          <p style={{ margin: 0 }}>
+                            <strong>Empresa:</strong> {empresa}
+                          </p>
                         </div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '11px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '13px' }}>
                           <thead>
                             <tr>
-                              <th style={{ border: '1px solid #ddd', padding: '6px', textAlign: 'left', backgroundColor: '#550701', color: 'white', fontSize: '10px' }}>Pão</th>
-                              <th style={{ border: '1px solid #ddd', padding: '6px', textAlign: 'center', backgroundColor: '#550701', color: 'white', fontSize: '10px' }}>Quantidade</th>
+                              <th style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'left', backgroundColor: '#550701', color: 'white', fontSize: '12px' }}>Pão</th>
+                              <th style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'center', backgroundColor: '#550701', color: 'white', fontSize: '12px' }}>Quantidade</th>
                             </tr>
                           </thead>
                           <tbody>
                             {produtosEmpresa.map((item, idx) => (
                               <tr key={idx}>
-                                <td style={{ border: '1px solid #ddd', padding: '6px', backgroundColor: '#fff', fontSize: '10px' }}>{item.produto_nome}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '6px', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#fff', fontSize: '10px' }}>{item.quantidade}</td>
+                                <td style={{ border: '1px solid #ddd', padding: '8px 10px', backgroundColor: '#fff', fontSize: '13px' }}>{item.produto_nome}</td>
+                                <td style={{ border: '1px solid #ddd', padding: '8px 10px', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#fff', fontSize: '13px' }}>{item.quantidade}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
-                        <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#550701', color: 'white', textAlign: 'center', fontSize: '11px', fontWeight: 'bold', borderRadius: '4px' }}>
+                        <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#550701', color: 'white', textAlign: 'center', fontSize: '14px', fontWeight: 'bold', borderRadius: '4px' }}>
                           Total: {totalGeral} {totalGeral === 1 ? 'unidade' : 'unidades'}
                         </div>
                       </div>
