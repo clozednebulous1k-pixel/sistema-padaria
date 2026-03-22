@@ -47,12 +47,12 @@ export default function DetalhesRoteiroPage() {
             <head>
               <title>Roteiro de Entregas - ${dados.nome_empresa}</title>
               <style>
-                body { font-family: Arial, sans-serif; padding: 8px; font-size: 11px; }
-                h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 6px; font-size: 14px; }
-                .info { margin: 6px 0; font-size: 10px; }
+                body { font-family: Arial, sans-serif; padding: 14px; font-size: 15px; }
+                h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 20px; }
+                .info { margin: 8px 0; font-size: 13px; }
                 .info p { margin: 2px 0; }
-                table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 10px; }
-                th, td { border: 1px solid #ddd; padding: 3px 5px; text-align: left; }
+                table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+                th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
                 th { background-color: #550701; color: white; }
               </style>
             </head>

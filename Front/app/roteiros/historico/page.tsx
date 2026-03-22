@@ -268,11 +268,11 @@ export default function HistoricoRoteirosPage() {
                                 <head>
                                   <title>Roteiro de Entregas - ${registro.diaSemana} - ${formatarDataHora(registro.dataImpressao)}</title>
                                   <style>
-                                    body { font-family: Arial, sans-serif; padding: 8px; font-size: 11px; }
-                                    h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 6px; font-size: 14px; }
-                                    .info { margin: 6px 0; font-size: 10px; }
-                                    table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 10px; }
-                                    th, td { border: 1px solid #ddd; padding: 3px 5px; text-align: left; }
+                                    body { font-family: Arial, sans-serif; padding: 14px; font-size: 15px; }
+                                    h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 20px; }
+                                    .info { margin: 8px 0; font-size: 13px; }
+                                    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+                                    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; }
                                     th { background-color: #550701; color: white; }
                                     td { text-align: left; }
                                     td:last-child { text-align: center; }
@@ -302,26 +302,26 @@ export default function HistoricoRoteirosPage() {
                                       `).join('')}
                                     </tbody>
                                   </table>
-                                  <h2 style="margin-top: 12px; color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; font-size: 12px;">
+                                  <h2 style="margin-top: 12px; color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; font-size: 17px;">
                                     Total de Pães por Tipo
                                   </h2>
-                                  <table style="width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 10px;">
+                                  <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px;">
                                     <thead>
                                       <tr>
-                                        <th style="border: 1px solid #ddd; padding: 3px 5px; background-color: #550701; color: white;">Pão</th>
-                                        <th style="border: 1px solid #ddd; padding: 3px 5px; background-color: #550701; color: white;">Total</th>
+                                        <th style="border: 1px solid #ddd; padding: 10px 12px; background-color: #550701; color: white;">Pão</th>
+                                        <th style="border: 1px solid #ddd; padding: 10px 12px; background-color: #550701; color: white;">Total</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       ${registro.totaisPorPao.map((total) => `
                                         <tr>
-                                          <td style="border: 1px solid #ddd; padding: 3px 5px;">${total.pao}</td>
-                                          <td style="border: 1px solid #ddd; padding: 3px 5px; text-align: center; font-weight: bold;">${total.quantidadeTotal}</td>
+                                          <td style="border: 1px solid #ddd; padding: 10px 12px;">${total.pao}</td>
+                                          <td style="border: 1px solid #ddd; padding: 10px 12px; text-align: center; font-weight: bold;">${total.quantidadeTotal}</td>
                                         </tr>
                                       `).join('')}
                                     </tbody>
                                   </table>
-                                  <p style="margin-top: 8px; font-size: 11px; font-weight: bold;">
+                                  <p style="margin-top: 8px; font-size: 15px; font-weight: bold;">
                                     Total Geral: ${registro.totalGeral} pães
                                   </p>
                                 </body>

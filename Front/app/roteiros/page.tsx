@@ -434,17 +434,17 @@ export default function RoteirosPage() {
           <head>
             <title>${tituloDoc} - ${nomeRoteiro} - ${diaSemana}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 14px; font-size: 14px; }
-              h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 8px; margin-bottom: 12px; font-size: 18px; }
-              .info { margin: 10px 0; font-size: 13px; }
-              table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
-              th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+              body { font-family: Arial, sans-serif; padding: 18px; font-size: 16px; }
+              h1 { color: #333; border-bottom: 2px solid #550701; padding-bottom: 8px; margin-bottom: 12px; font-size: 22px; }
+              .info { margin: 10px 0; font-size: 15px; }
+              table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 16px; }
+              th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; }
               th { background-color: #550701; color: white; }
               .totais { margin-top: 16px; padding: 12px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; }
-              .totais h3 { margin: 0 0 10px 0; font-size: 15px; color: #333; }
-              .totais table { margin: 0; font-size: 13px; }
-              .totais th, .totais td { padding: 6px 10px; }
-              .total-geral { margin-top: 10px; padding: 10px; background-color: #550701; color: white; text-align: center; font-weight: bold; font-size: 14px; border-radius: 4px; }
+              .totais h3 { margin: 0 0 10px 0; font-size: 17px; color: #333; }
+              .totais table { margin: 0; font-size: 15px; }
+              .totais th, .totais td { padding: 10px 12px; }
+              .total-geral { margin-top: 10px; padding: 14px; background-color: #550701; color: white; text-align: center; font-weight: bold; font-size: 17px; border-radius: 4px; }
             </style>
           </head>
           <body style="font-size: ${tamanhoPercent}%;">
@@ -543,42 +543,42 @@ export default function RoteirosPage() {
           .sort((a, b) => a.produtoNome.localeCompare(b.produtoNome))
         const totalGeral = produtosArray.reduce((s, p) => s + p.quantidade, 0)
         return `
-      <div class="romaneio-page" style="${pageBreakStyle(index)} min-height: 100vh; display: flex; flex-direction: column; padding: 10px; box-sizing: border-box; font-size: 11px;">
-        <div class="data" style="text-align: right; color: #666; margin-bottom: 8px; font-size: 10px;">
+      <div class="romaneio-page" style="${pageBreakStyle(index)} min-height: 100vh; display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; font-size: 13px;">
+        <div class="data" style="text-align: right; color: #666; margin-bottom: 8px; font-size: 12px;">
           <p><strong>Data de Emissão:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
         </div>
-        <h1 style="color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 14px;">ROMANEIO DE PEDIDOS</h1>
-        <div class="info" style="margin: 8px 0; padding: 8px; background-color: #f9f9f9; border-left: 4px solid #f3b125; font-size: 10px;">
+        <h1 style="color: #333; border-bottom: 2px solid #550701; padding-bottom: 4px; margin-bottom: 8px; font-size: 17px;">ROMANEIO DE PEDIDOS</h1>
+        <div class="info" style="margin: 8px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #f3b125; font-size: 12px;">
           <p style="margin: 2px 0;"><strong>Empresa/Cliente:</strong> ${empresa}</p>
           <p style="margin: 2px 0;"><strong>Roteiro:</strong> ${nomeRoteiro}</p>
           <p style="margin: 2px 0;"><strong>Dia:</strong> ${diaSemana}</p>
           <p style="margin: 2px 0;"><strong>Data:</strong> ${dataDia}</p>
           <p style="margin: 2px 0;"><strong>Período:</strong> ${periodoLabel}</p>
         </div>
-        <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 10px;">
+        <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px;">
           <thead>
             <tr>
-              <th style="width: 60%; border: 1px solid #ddd; padding: 4px 6px; text-align: left; background-color: #550701; color: white; font-weight: bold;">Produto</th>
-              <th style="width: 40%; border: 1px solid #ddd; padding: 4px 6px; text-align: left; background-color: #550701; color: white; font-weight: bold;">Quantidade</th>
+              <th style="width: 60%; border: 1px solid #ddd; padding: 8px 10px; text-align: left; background-color: #550701; color: white; font-weight: bold;">Produto</th>
+              <th style="width: 40%; border: 1px solid #ddd; padding: 8px 10px; text-align: left; background-color: #550701; color: white; font-weight: bold;">Quantidade</th>
             </tr>
           </thead>
           <tbody>
             ${produtosArray.map((p) => `
               <tr>
-                <td style="border: 1px solid #ddd; padding: 4px 6px; text-align: left; background-color: #fff;">${p.produtoNome}</td>
-                <td style="border: 1px solid #ddd; padding: 4px 6px; text-align: center; font-weight: bold; background-color: #fff;">${p.quantidade}</td>
+                <td style="border: 1px solid #ddd; padding: 8px 10px; text-align: left; background-color: #fff;">${p.produtoNome}</td>
+                <td style="border: 1px solid #ddd; padding: 8px 10px; text-align: center; font-weight: bold; background-color: #fff;">${p.quantidade}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
-        <div class="total" style="margin-top: 8px; padding: 8px; background-color: #550701; color: white; text-align: center; font-size: 12px; font-weight: bold;">
+        <div class="total" style="margin-top: 8px; padding: 10px; background-color: #550701; color: white; text-align: center; font-size: 14px; font-weight: bold;">
           Total Geral: ${totalGeral} unidades
         </div>
         <div style="margin-top: auto; padding-top: 30px; border-top: 2px solid #550701;">
           <div style="text-align: center;">
-            <p style="margin-bottom: 25px; font-size: 11px;">_________________________________________</p>
-            <p style="font-size: 11px; font-weight: bold;">Assinatura do Responsável pelo Recebimento</p>
-            <p style="font-size: 10px; color: #666; margin-top: 2px;">Nome e Carimbo da Empresa</p>
+            <p style="margin-bottom: 25px; font-size: 13px;">_________________________________________</p>
+            <p style="font-size: 13px; font-weight: bold;">Assinatura do Responsável pelo Recebimento</p>
+            <p style="font-size: 12px; color: #666; margin-top: 2px;">Nome e Carimbo da Empresa</p>
           </div>
         </div>
       </div>

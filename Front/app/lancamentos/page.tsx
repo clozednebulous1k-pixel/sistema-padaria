@@ -255,14 +255,14 @@ export default function LancamentosPage() {
   <meta charset="utf-8">
   <title>Lançamentos - ${dataFormatada} (${periodoTexto})</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; font-size: 12px; }
-    h1 { font-size: 16px; margin-bottom: 4px; color: #333; }
-    .info { margin: 8px 0 12px; padding: 8px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
+    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .total-geral { margin-top: 12px; padding: 10px; background: #550701; color: white; font-weight: bold; text-align:center; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; font-weight: bold; text-align:center; font-size: 17px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>

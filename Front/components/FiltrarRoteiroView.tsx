@@ -66,9 +66,6 @@ function getDiaSemanaFromDate(date: Date): string {
 }
 
 /** Extrai só o nome de exibição do roteiro (remove prefixo "Roteiro N - "). */
-/** Abreviação do dia (DOM–SAB) alinhada ao modelo de impressão para recorte. */
-const ABREV_DIA_SEMANA = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'] as const
-
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -624,11 +621,11 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Roteiro por massa - ${dataFormatada}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; font-size: 12px; }
-    h1 { font-size: 16px; margin-bottom: 4px; color: #333; }
-    .info { margin: 8px 0 12px; padding: 8px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; margin: 8px 0; max-width: 600px; }
-    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
+    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; max-width: 640px; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
@@ -692,16 +689,16 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Roteiro - ${dataFormatada} - ${periodoLabel}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; font-size: 12px; }
-    h1 { font-size: 16px; margin-bottom: 4px; color: #333; }
-    .info { margin: 8px 0 12px; padding: 8px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
+    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .totais-pao { margin-top: 12px; padding: 8px; border-top: 1px solid #ddd; font-size: 11px; }
-    .totais-pao h3 { margin: 0 0 4px; font-size: 12px; }
-    .total-geral { margin-top: 12px; padding: 10px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 14px; }
+    .totais-pao { margin-top: 14px; padding: 10px; border-top: 1px solid #ddd; font-size: 13px; }
+    .totais-pao h3 { margin: 0 0 6px; font-size: 15px; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 17px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
@@ -753,11 +750,10 @@ export default function FiltrarRoteiroView() {
       return
     }
     const dataFormatada = format(dataSelecionada, 'dd/MM/yyyy')
-    const diaSemanaTitulo = format(dataSelecionada, 'EEEE', { locale: ptBR })
-      .replace(/-/g, ' ')
-      .toUpperCase()
-    const cabecalho = `${diaSemanaTitulo} ${dataFormatada}`
-    const abrevDia = ABREV_DIA_SEMANA[dataSelecionada.getDay()] ?? ''
+    const diaMesCurto = format(dataSelecionada, 'dd/MM')
+    const diaSemanaRaw = format(dataSelecionada, 'EEEE', { locale: ptBR })
+    const diaSemanaExtenso = diaSemanaRaw.charAt(0).toUpperCase() + diaSemanaRaw.slice(1)
+    const linhaDataPedido = `${diaSemanaExtenso}, ${diaMesCurto}`
 
     const blocos = itensFiltrados
       .map((p) => {
@@ -765,10 +761,8 @@ export default function FiltrarRoteiroView() {
         const linhaProd = `${escapeHtml(nomePao)} ${p.quantidade}`
         return `
     <div class="bloco-recorte">
-      <div class="linha-empresa">
-        <span class="nome-empresa">${escapeHtml(p.empresa)}</span>
-        <span class="abrev-dia">${escapeHtml(abrevDia)}</span>
-      </div>
+      <div class="linha-data">${escapeHtml(linhaDataPedido)}</div>
+      <div class="linha-empresa">${escapeHtml(p.empresa)}</div>
       <div class="linha-produto">${linhaProd}</div>
     </div>`
       })
@@ -785,55 +779,48 @@ export default function FiltrarRoteiroView() {
     body {
       font-family: Arial, Helvetica, sans-serif;
       margin: 0;
-      padding: 20px 16px 40px;
-      font-size: 14px;
+      padding: 24px 16px 40px;
+      font-size: 16px;
       color: #222;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .cabecalho {
-      text-align: center;
-      font-weight: bold;
-      font-size: 18px;
-      letter-spacing: 0.02em;
-      margin-bottom: 28px;
-      color: #1a1a1a;
-    }
     .bloco-recorte {
-      padding: 22px 8px 36px;
-      border-bottom: 1px solid #ccc;
+      padding: 28px 12px 40px;
+      border-bottom: 1px solid #bbb;
       page-break-inside: avoid;
       break-inside: avoid;
+      text-align: center;
     }
     .bloco-recorte:last-child {
       border-bottom: none;
     }
-    .linha-empresa {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-      font-weight: 600;
-      font-size: 13px;
+    .linha-data {
+      font-weight: 700;
+      font-size: 18px;
       color: #7a2e1f;
+      margin-bottom: 14px;
+      letter-spacing: 0.02em;
     }
-    .nome-empresa { flex: 1; text-align: left; }
-    .abrev-dia { flex-shrink: 0; text-align: right; min-width: 2.5rem; }
+    .linha-empresa {
+      font-weight: 700;
+      font-size: 17px;
+      color: #7a2e1f;
+      margin-bottom: 16px;
+    }
     .linha-produto {
-      text-align: center;
-      margin-top: 16px;
-      font-size: 15px;
-      color: #333;
-      font-weight: 500;
+      font-size: 19px;
+      color: #222;
+      font-weight: 600;
+      line-height: 1.35;
     }
     @media print {
-      body { padding: 12px 10px 0; }
-      .bloco-recorte { padding: 18px 6px 32px; }
+      body { padding: 16px 12px 0; }
+      .bloco-recorte { padding: 24px 10px 36px; }
     }
   </style>
 </head>
 <body>
-  <div class="cabecalho">${escapeHtml(cabecalho)}</div>
   ${blocos}
 </body>
 </html>
@@ -877,14 +864,14 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Massa Doce Cliente - ${dataFormatada}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; font-size: 12px; }
-    h1 { font-size: 16px; margin-bottom: 4px; color: #333; }
-    .info { margin: 8px 0 12px; padding: 8px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
+    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .total-geral { margin-top: 12px; padding: 10px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 14px; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 17px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
@@ -947,14 +934,14 @@ export default function FiltrarRoteiroView() {
   <meta charset="utf-8">
   <title>Massa Salgada Cliente - ${dataFormatada}</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; font-size: 12px; }
-    h1 { font-size: 16px; margin-bottom: 4px; color: #333; }
-    .info { margin: 8px 0 12px; padding: 8px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+    body { font-family: Arial, sans-serif; padding: 18px; font-size: 15px; }
+    h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
+    .info { margin: 10px 0 14px; padding: 10px 12px; background: #f5f5f5; border-left: 4px solid #550701; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px 14px; text-align: left; font-size: 15px; }
     th { background: #550701; color: white; font-weight: bold; }
     td:last-child { text-align: center; font-weight: bold; }
-    .total-geral { margin-top: 12px; padding: 10px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 14px; }
+    .total-geral { margin-top: 14px; padding: 14px; background: #550701; color: white; text-align: center; font-weight: bold; font-size: 17px; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   </style>
 </head>
