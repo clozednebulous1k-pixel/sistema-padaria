@@ -5,8 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { roteiroApi, Roteiro } from '@/lib/api'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { format } from 'date-fns'
-import ptBR from 'date-fns/locale/pt-BR'
+import { formatarDataProducaoBR } from '@/lib/formatarDataBrasil'
 
 export default function DetalhesRoteiroPage() {
   const params = useParams()
@@ -37,7 +36,7 @@ export default function DetalhesRoteiroPage() {
       const dados = await roteiroApi.dadosImpressao(id)
       
       // Formatar data para impressão
-      const dataFormatada = formatarData(dados.data_producao)
+      const dataFormatada = formatarDataProducaoBR(dados.data_producao)
       
       // Criar uma nova janela para impressão
       const janelaImpressao = window.open('', '_blank')
@@ -92,14 +91,6 @@ export default function DetalhesRoteiroPage() {
     }
   }
 
-  const formatarData = (data: string) => {
-    try {
-      return format(new Date(data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-    } catch {
-      return data
-    }
-  }
-
   if (loading) {
     return (
       <div className="container mx-auto px-4">
@@ -129,7 +120,7 @@ export default function DetalhesRoteiroPage() {
               Roteiro de Entregas
             </h1>
             <p className="text-sm text-gray-600 mt-0.5">
-              Data: {formatarData(roteiro.data_producao)}
+              Data: {formatarDataProducaoBR(roteiro.data_producao)}
             </p>
           </div>
           <div className="flex gap-2">

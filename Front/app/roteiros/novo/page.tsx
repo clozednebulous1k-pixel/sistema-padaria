@@ -13,6 +13,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import Loading from '@/components/Loading'
 import { SelectComBusca } from '@/components/SelectComBusca'
 import { opcaoRelatorioParaLabel } from '@/lib/opcoesRelatorio'
+import { formatarDataProducaoBR } from '@/lib/formatarDataBrasil'
 
 const DIAS_SEMANA = [
   'Segunda-feira',
@@ -660,7 +661,7 @@ function NovoRoteiroContent() {
                   </h3>
                   <div style={{ marginBottom: '10px', fontSize: '12px', color: darkMode ? '#e2e8f0' : '#333' }}>
                     <p><strong>Dia:</strong> {diaParam}</p>
-                    <p><strong>Data:</strong> {dataParam || format(new Date(), 'yyyy-MM-dd')}</p>
+                    <p><strong>Data:</strong> {formatarDataProducaoBR(dataParam || format(new Date(), 'yyyy-MM-dd'))}</p>
                     <p><strong>Período:</strong> {periodoParam === 'manha' ? 'Manhã' : 'Noite'}</p>
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '11px' }}>

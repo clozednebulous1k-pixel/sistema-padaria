@@ -11,6 +11,7 @@ import { format, parseISO } from 'date-fns'
 import { useTheme } from '@/components/ThemeProvider'
 import { SelectComBusca } from '@/components/SelectComBusca'
 import { opcaoRelatorioParaLabel } from '@/lib/opcoesRelatorio'
+import { formatarDataProducaoBR } from '@/lib/formatarDataBrasil'
 
 interface FormData {
   data_producao: string
@@ -408,7 +409,7 @@ export default function EditarRoteiroPage() {
       toast.error('Adicione itens ao roteiro para imprimir')
       return
     }
-    const dataProd = watch('data_producao') || '-'
+    const dataProd = formatarDataProducaoBR(watch('data_producao'))
     const periodoVal = watch('periodo')
     const periodoLabel = periodoVal === 'manha' ? 'Manhã' : periodoVal === 'noite' ? 'Noite' : periodoVal === 'tarde' ? 'Tarde' : periodoVal || '-'
     const diaLabel = roteiro?.nome_empresa || '-'
@@ -724,7 +725,7 @@ export default function EditarRoteiroPage() {
                   </h3>
                   <div style={{ marginBottom: '10px', fontSize: '12px', color: darkMode ? '#e2e8f0' : '#333' }}>
                     <p><strong>Dia:</strong> {roteiro?.nome_empresa || '-'}</p>
-                    <p><strong>Data:</strong> {watch('data_producao') || '-'}</p>
+                    <p><strong>Data:</strong> {formatarDataProducaoBR(watch('data_producao'))}</p>
                     <p><strong>Período:</strong> {watch('periodo') === 'manha' ? 'Manhã' : watch('periodo') === 'noite' ? 'Noite' : watch('periodo') || '-'}</p>
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '11px' }}>
